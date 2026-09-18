@@ -1,7 +1,13 @@
 """FastAPI app behind RO-Crate Studio. Run with ``python -m rocrate_studio``."""
 from __future__ import annotations
 
-import asyncio
+from . import deps
+
+# also covers `uvicorn rocrate_studio.app:app`, which never goes through
+# __main__: everything below this line imports packages the check is about
+deps.require()
+
+import asyncio  # noqa: E402
 import copy
 import importlib
 import json

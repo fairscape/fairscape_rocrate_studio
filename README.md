@@ -3,11 +3,30 @@
 A point-and-click, runs-on-your-laptop GUI for making RO-Crates with the
 fairscape tools. No code, no terminal beyond starting it.
 
+It is a front end over the other fairscape repos, so install them into one
+environment and start it from that environment:
+
 ```bash
-conda activate fairscape        # the env with fairscape_models + fairscape_conversion
-pip install -e .                # once
-rocrate-studio                  # opens http://127.0.0.1:8765 in your browser
+mkdir -p ~/fairscape && cd ~/fairscape
+git clone https://github.com/fairscape/fairscape_models
+git clone https://github.com/fairscape/fairscape_conversion
+git clone https://github.com/fairscape/fairscape_artifacts      # optional panels
+git clone https://github.com/fairscape/AIreadiness-grader       # optional panels
+git clone https://github.com/fairscape/fairscape_rocrate_studio rocrate_studio
+
+conda create -n fairscape python=3.11 -y && conda activate fairscape
+pip install -e fairscape_models -e fairscape_conversion \
+            -e fairscape_artifacts -e AIreadiness-grader -e rocrate_studio
+
+cd ~                      # anywhere except ~/fairscape
+rocrate-studio --check    # what this environment has, and what to install
+rocrate-studio            # opens http://127.0.0.1:8765
 ```
+
+The studio will not start with a required package missing — it says which one
+and the command that installs it. **[INSTALL.md](INSTALL.md)** has the details,
+the optional panels (artifacts, grader, Nextflow, Snakemake) and what to do
+when it does not start.
 
 `python -m rocrate_studio --port 9000 --no-browser` also works.
 Open `http://127.0.0.1:8765/?demo=mlflow` to land with a sample already converted.
@@ -109,4 +128,3 @@ Outputs default to `~/rocrate-studio-out/` (override with `ROCRATE_STUDIO_OUT`).
   output folder instead.
 * Everything is local: the server binds 127.0.0.1 and the file browser is the
   local filesystem.
-# fairscape_rocrate_studio
