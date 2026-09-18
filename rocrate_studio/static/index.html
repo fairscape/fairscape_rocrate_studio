@@ -1,0 +1,872 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RO-Crate Studio</title>
+<style>
+:root{
+  --bg:#f6f7f9;--panel:#fff;--ink:#1c2128;--muted:#5f6b7a;--line:#e2e5ea;--accent:#2f6fed;--accent-ink:#fff;--accent-soft:#e8effd;
+  --dataset:#3b82f6;--software:#8b5cf6;--computation:#f59e0b;--mlmodel:#ec4899;--schema:#10b981;--root:#374151;--other:#9ca3af;
+  --danger:#dc2626;--ok:#16a34a;--left:380px;--drawer:440px;
+}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;font:1rem/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;align-items:center;gap:14px;padding:12px 18px;background:var(--panel);border-bottom:1px solid var(--line)}
+header h1{font-size:1.25rem;margin:0;font-weight:700;white-space:nowrap}
+header>button,header>select,header>.badge{flex:none;white-space:nowrap}
+header .badge{max-width:260px;overflow:hidden;text-overflow:ellipsis}
+header select{width:auto!important;max-width:180px;padding:9px 10px}
+header .sub{color:var(--muted);font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+header .spacer{flex:1}
+main{flex:1;display:grid;grid-template-columns:var(--left) 1fr auto;min-height:0}
+aside,section{min-height:0}
+aside{background:var(--panel);border-right:1px solid var(--line);padding:18px 20px 40px;overflow-y:auto;overflow-x:hidden}
+#canvas{position:relative;background:radial-gradient(circle,#d5d9e0 1px,transparent 1px) 0 0/22px 22px;min-width:0}
+svg{width:100%;height:100%;display:block}
+/* ---- steps ---- */
+.step{margin-bottom:22px}
+.step h2{display:flex;align-items:center;gap:10px;font-size:1.15rem;margin:0 0 4px;font-weight:700}
+.step h2 .n{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:.95rem;flex:none}
+.step .lead{color:var(--muted);margin:0 0 10px;font-size:.95rem}
+.step.dim{opacity:.45;pointer-events:none}
+label{display:block;font-size:.95rem;color:var(--ink);margin:12px 0 5px;font-weight:600}
+label .opt{color:var(--muted);font-weight:400}
+input[type=text],textarea,select{width:100%;padding:11px 12px;border:1px solid #cfd5dd;border-radius:8px;font:inherit;font-size:1rem;background:#fff;color:var(--ink)}
+select{appearance:auto;font-weight:600}
+textarea{min-height:76px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:3px solid #bfd0fb;border-color:var(--accent)}
+button{font:inherit;font-size:1rem;padding:10px 16px;border-radius:8px;border:1px solid #cfd5dd;background:#fff;color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+button.big{width:100%;padding:14px;font-size:1.1rem}
+button.small{padding:6px 10px;font-size:.9rem}
+button.link{border:none;background:none;color:var(--accent);padding:4px 0;text-decoration:underline;font-size:.95rem}
+button.danger{color:var(--danger);border-color:#f3c2c2}
+button:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row>*{flex:1}
+.hint{font-size:.9rem;color:var(--muted);margin-top:4px}
+.fileinput{display:flex;gap:6px}
+.fileinput input{flex:1;min-width:0}
+.fileinput button{white-space:nowrap}
+details.adv{margin-top:14px;border:1px dashed #cfd5dd;border-radius:8px;padding:8px 12px}
+details.adv summary{cursor:pointer;color:var(--muted);font-size:.95rem;font-weight:600}
+details.adv label{font-size:.9rem}
+.log{font:.85rem/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-word;max-height:260px;overflow-y:auto;overflow-x:hidden;margin-top:12px}
+.log.ok{background:#052e16;color:#bbf7d0}
+.log.err{background:#450a0a;color:#fecaca}
+/* ---- canvas ---- */
+.toolbar{position:absolute;top:12px;left:14px;right:14px;display:flex;gap:8px;align-items:center;z-index:2}
+.toolbar .status{font-size:.9rem;color:var(--muted);background:rgba(255,255,255,.95);padding:8px 12px;border-radius:8px;border:1px solid var(--line);max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toolbar .spacer{flex:1}
+.toolbar button{white-space:nowrap;flex:none}
+.toolbar a.status{color:var(--accent);text-decoration:none;font-weight:600}
+.toolbar select.status{width:128px!important;flex:none;padding:7px 10px;color:var(--accent);font-weight:600;cursor:pointer;font-size:.9rem}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.9rem;position:absolute;left:14px;bottom:12px;background:rgba(255,255,255,.95);padding:8px 12px;border-radius:8px;border:1px solid var(--line)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.node{cursor:pointer}
+.node rect{stroke:#fff;stroke-width:1.5;rx:9}
+.node.selected rect{stroke:var(--ink);stroke-width:3}
+.node text{fill:#fff;font-size:14px;pointer-events:none}
+.node text.type{font-size:11px;opacity:.85}
+.edge{fill:none;stroke:#94a3b8;stroke-width:1.6;marker-end:url(#arrow)}
+.edge.highlight{stroke:var(--accent);stroke-width:3}
+.edgelabel{font-size:11px;fill:#64748b;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+.empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);text-align:center;padding:40px;pointer-events:none;font-size:1.1rem}
+.empty[hidden]{display:none}
+.empty div{max-width:460px}
+.empty b{color:var(--ink)}
+/* ---- drawer ---- */
+#drawer{display:flex;min-height:0;width:0;transition:width .15s ease}
+#drawer.open{width:var(--drawer)}
+#drawer.max{width:min(60vw,1100px)}
+.handle{width:8px;cursor:col-resize;background:linear-gradient(to right,transparent 2px,#cfd5dd 2px,#cfd5dd 4px,transparent 4px);flex:none}
+.handle:hover{background:linear-gradient(to right,transparent 1px,var(--accent) 1px,var(--accent) 5px,transparent 5px)}
+#editor{flex:1;min-width:0;background:var(--panel);border-left:1px solid var(--line);padding:16px 20px;overflow:auto}
+#editor .head{display:flex;gap:6px;align-items:center;margin-bottom:4px}
+#editor .head .badge{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#editor .head button.small{flex:none;padding:5px 8px}
+#editor .head .spacer{flex:1}
+#editor h3{margin:8px 0 2px;font-size:1.25rem;word-break:break-word}
+.badge{font-size:.85rem;padding:3px 10px;border-radius:99px;background:var(--accent-soft);color:#2748a8;font-weight:600}
+.idline{font-size:.85rem;color:var(--muted);word-break:break-all;margin-bottom:14px}
+.kv{display:grid;grid-template-columns:minmax(110px,32%) 1fr auto;gap:8px;align-items:start;margin-bottom:10px}
+.kv .k{font-size:.95rem;color:var(--muted);padding-top:10px;word-break:break-all}
+.kv textarea{min-height:44px}
+.kv .refs{font-size:.95rem;padding-top:8px}
+.kv .refs a{color:var(--accent)}
+.kv .refs button{padding:0 6px;font-size:.8rem;margin-left:4px}
+.kv .x{padding:8px 10px;color:var(--muted)}
+.problem{font-size:.95rem;color:var(--danger);margin:6px 0;padding:8px 10px;background:#fff1f1;border-radius:6px}
+details.more{margin:14px 0 0;border-top:1px solid var(--line);padding-top:10px}
+#aiready{margin-top:18px;border-top:2px solid var(--line);padding-top:12px}
+#aiready h4{margin:0 0 4px;font-size:1.1rem}
+#aiready .lead{color:var(--muted);font-size:.9rem;margin:0 0 10px}
+.grp{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:#fafbfc}
+.grp summary{padding:10px 12px;cursor:pointer;display:flex;gap:10px;align-items:center;font-weight:600}
+.grp summary .cnt{margin-left:auto;font-size:.85rem;font-weight:600;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:99px;padding:1px 9px}
+.grp summary .cnt.done{color:var(--ok);border-color:#bbf7d0;background:#f0fdf4}
+.grp .blurb{color:var(--muted);font-size:.85rem;padding:0 12px 6px}
+.frow{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;border-top:1px solid #eef0f3;background:#fff}
+.frow:last-child{border-radius:0 0 8px 8px}
+.frow .t{flex:1;min-width:0}
+.frow .t b{display:block;font-size:.95rem}
+.frow .t small{display:block;color:var(--muted);font-size:.85rem;line-height:1.35}
+.frow .t small.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.frow .t small.clamp:hover{-webkit-line-clamp:unset}
+.frow button{flex:none;padding:5px 10px;font-size:.9rem}
+.frow .have{flex:none;color:var(--ok);font-weight:600;font-size:.9rem;padding-top:4px}
+.frow.req b::after{content:' *';color:var(--danger)}
+details.more summary{cursor:pointer;color:var(--muted);font-weight:600}
+/* ---- drawer view toggle + Improve ---- */
+.seg{display:inline-flex;flex:none;border:1px solid #cfd5dd;border-radius:8px;overflow:hidden}
+.seg button{border:none;border-radius:0;padding:5px 9px;font-size:.9rem;background:#fff;color:var(--muted);white-space:nowrap}
+.seg button+button{border-left:1px solid #cfd5dd}
+.seg button.on{background:var(--accent);color:#fff;font-weight:600}
+#improve{margin-top:18px;border-top:2px solid var(--line);padding-top:12px}
+#improve h4{margin:0 0 4px;font-size:1.1rem}
+#improve .lead{color:var(--muted);font-size:.9rem;margin:0 0 10px}
+#improve .lead b{color:var(--ink)}
+.frow .t small.lift{color:#2748a8}
+.frow .t small.lift .short{font-weight:600}
+.frow.done .t b{color:var(--muted)}
+.frow.done .t small{color:#9ca3af}
+.frow .win{display:inline-block;font-size:.75rem;font-weight:600;color:#065f46;background:#d1fae5;border-radius:99px;padding:0 7px;margin-left:6px;vertical-align:1px}
+.frow.job .t code{font-size:.85rem;background:#f1f3f6;border-radius:4px;padding:1px 6px}
+.frow.job .t small.why{color:var(--ink)}
+.sublist{padding:4px 12px 8px 24px;background:#fff;border-top:1px solid #eef0f3}
+.sublist .frow{padding:5px 0;border-top:none}
+.sublist .frow .t b{font-weight:500;font-size:.9rem}
+.grp summary .cnt.todo{color:#2748a8;border-color:#bfd0fb;background:var(--accent-soft)}
+.dlg .box{width:520px}
+.dlg .box label{font-weight:400;display:flex;gap:8px;align-items:flex-start;margin:6px 0}
+.dlg .box label input{margin-top:5px}
+.dlg .box p{margin:0}
+/* ---- browser dialog ---- */
+.browser{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:9}
+.browser .box{background:#fff;width:640px;max-height:75vh;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.browser ul{list-style:none;margin:0;padding:0;overflow:auto;flex:1;border:1px solid var(--line);border-radius:8px;min-height:200px}
+.browser li{padding:9px 12px;cursor:pointer;border-bottom:1px solid #f1f3f6;font-size:1rem}
+.browser li:hover{background:var(--accent-soft)}
+.browser li.dir{font-weight:600}
+.browser li.pick{background:#fff7e6}
+</style>
+</head>
+<body>
+<header>
+  <h1>RO-Crate Studio</h1>
+  <span class="spacer"></span>
+  <span id="crateTitle" class="badge" hidden title="Click to edit the crate's own title, author, description…" style="cursor:pointer"></span>
+  <!-- <button id="btnValidate" disabled>Check for problems</button> -->
+  <select id="exportPlugin" disabled style="font-weight:600"><option value="">Export as…</option></select>
+  <button id="btnSave" class="primary" disabled>Save crate</button>
+</header>
+<main>
+  <aside id="left">
+    <div class="step" id="step1">
+      <h2><span class="n">1</span>What do you have?</h2>
+      <p class="lead">Pick the thing you want to describe. We'll turn it into an RO-Crate.</p>
+      <select id="kind"></select>
+      <p class="hint" id="kindBlurb"></p>
+    </div>
+
+    <div class="step" id="step2">
+      <h2><span class="n">2</span>Where is it?</h2>
+      <p class="lead" id="whereLead">Point at the file or folder.</p>
+      <form id="mainForm" onsubmit="return false"></form>
+      <div id="sampleRow"></div>
+      <details class="adv" id="advBox"><summary>Advanced options</summary><form id="advForm" onsubmit="return false"></form></details>
+    </div>
+
+    <div class="step" id="step3">
+      <h2><span class="n">3</span>Describe it</h2>
+      <p class="lead">A few words so people know what this is. Everything is optional.</p>
+      <form id="metaForm" onsubmit="return false">
+        <label>Title</label><input type="text" name="name" placeholder="e.g. Iris classifier experiment, March run">
+        <label>Author <span class="opt">(you, or the lab)</span></label><input type="text" name="author">
+        <label>Short description</label><textarea name="description" placeholder="What was done, on what data, for what purpose."></textarea>
+        <label>Keywords <span class="opt">(comma separated)</span></label><input type="text" name="keywords" placeholder="proteomics, cell map, …">
+      </form>
+    </div>
+
+    <button id="btnGo" class="primary big">Build crate</button>
+    <button id="btnStop" class="danger big" hidden>Stop the run</button>
+    <div id="runLog" class="log" hidden></div>
+  </aside>
+
+  <section id="canvas">
+    <div class="toolbar">
+      <span class="status" id="status">Nothing loaded yet</span>
+      <span class="spacer"></span>
+      <select id="artifacts" class="status" hidden title="Pages and files that sit next to the saved crate, and the fairscape-artifacts build that makes them (datasheet, previews, evidence graph, AI-readiness review)"><option value="">Artifacts ▾</option></select>
+      <button id="btnRoot" class="small primary" hidden>✎ Edit crate details</button>
+      <button id="btnAdd" class="small">+ Add entity</button>
+      <button id="btnFit" class="small">Fit</button>
+      <button id="btnJson" class="small">JSON</button>
+    </div>
+    <div class="empty" id="empty"><div><b>Start on the left.</b><br>Choose what you have, point at it, and click <b>Build crate</b>.<br><br>Your crate will appear here as a map: each box is a piece of the crate, arrows show what was used to make what. Click any box to read or fix its details. The dark box is the crate itself: its title, author and description live there.</div></div>
+    <svg id="svg"><defs><marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs><g id="view"></g></svg>
+    <div class="legend">
+      <span><i style="background:var(--dataset)"></i>Data</span>
+      <span><i style="background:var(--software)"></i>Software</span>
+      <span><i style="background:var(--computation)"></i>Computation</span>
+      <span><i style="background:var(--mlmodel)"></i>Model</span>
+      <span><i style="background:var(--schema)"></i>Schema</span>
+      <span><i style="background:var(--root)"></i>The crate itself</span>
+    </div>
+  </section>
+
+  <div id="drawer">
+    <div class="handle" id="handle" title="drag to resize"></div>
+    <section id="editor">
+      <div class="head">
+        <span id="edType" class="badge"></span>
+        <span class="seg" id="viewSeg" title="All properties: every field FAIRSCAPE knows, grouped. Improve: what to fill in next, ranked by the last AI-readiness build"><button data-view="all" class="on">All fields</button><button data-view="improve">Improve</button></span>
+        <span class="spacer"></span>
+        <button id="btnMax" class="small" title="expand / shrink">⤢</button>
+        <button id="btnClose" class="small" title="close">✕</button>
+      </div>
+      <h3 id="edName"></h3>
+      <div class="idline" id="edId"></div>
+      <div id="edProblems"></div>
+      <div id="edFields"></div>
+      <div id="aiready">
+        <h4>AI-Ready details</h4>
+        <p class="lead" id="aireadyLead">Everything FAIRSCAPE knows how to describe, in plain groups. Click <b>Add</b> to fill one in; it appears above.</p>
+        <div id="aireadyGroups"></div>
+        <details class="more"><summary>Add a property that is not listed</summary>
+          <div class="row" style="margin-top:8px"><input type="text" id="newKey" placeholder="property name, e.g. rai:dataBiases"><button id="btnAddKey">Add</button></div>
+        </details>
+      </div>
+      <div id="improve" hidden>
+        <h4>Improve the AI-readiness score</h4>
+        <p class="lead" id="improveLead"></p>
+        <div id="improveBody"></div>
+      </div>
+      <details class="more"><summary>Connect to another box</summary>
+        <div class="row" style="margin-top:8px"><select id="linkProp"><option value="usedDataset">used this data</option><option value="usedSoftware">used this software</option><option value="usedMLModel">used this model</option><option value="generatedBy">was made by</option><option value="generated">produced</option></select><select id="linkTarget"></select><button id="btnLink">Connect</button></div>
+      </details>
+      <details class="more"><summary>Danger zone</summary>
+        <button id="btnDelete" class="danger" style="margin-top:8px">Delete this box and its links</button>
+      </details>
+    </section>
+  </div>
+</main>
+
+<script>
+// ---------- state ----------
+const S = { plugins: [], kind: null, crate: null, cratePath: null, selected: null, layout: null, problems: {}, nf: null, smk: null, art: null, built: false, estimate: null, improve: null, view: 'all' };
+const $ = s => document.querySelector(s);
+const api = async (path, opts={}) => {
+  const r = await fetch(path, {headers:{'Content-Type':'application/json'}, ...opts});
+  const j = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(j.detail || j.error || r.statusText);
+  return j;
+};
+const post = (p, body) => api(p, {method:'POST', body: JSON.stringify(body)});
+const META = ['name','description','author','keywords'];
+const ADV_META = ['license','naan'];
+
+// ---------- helpers ----------
+const typesOf = n => { const t=[].concat(n['@type']||[]).map(t => String(t).split('#').pop().split(':').pop()); const evi=t.filter(x=>!['Entity','Activity'].includes(x)); return evi.length?evi:t; };
+const kindOf = n => {
+  const t = typesOf(n);
+  if (n['@id']==='ro-crate-metadata.json') return 'descriptor';
+  if (t.includes('ROCrate') || (S.crate && isRoot(n))) return 'root';
+  for (const k of ['MLModel','Computation','Software','Schema','Dataset']) if (t.includes(k)) return k.toLowerCase();
+  return 'other';
+};
+function isRoot(n){ const d = S.crate['@graph'].find(x=>x['@id']==='ro-crate-metadata.json'); return d && d.about && (d.about['@id']||d.about)===n['@id']; }
+const color = k => ({dataset:'var(--dataset)',software:'var(--software)',computation:'var(--computation)',mlmodel:'var(--mlmodel)',schema:'var(--schema)',root:'var(--root)'}[k]||'var(--other)');
+const label = n => { const t=(n.name || n['@id'] || '').toString(); return t.length>24 ? t.slice(0,23)+'…' : t; };
+const EDGE_PROPS = ['usedDataset','usedSoftware','usedMLModel','generatedBy','generated','hasPart','isPartOf','annotates','usedByComputation','usedBy','sourceOrganization'];
+const refIds = v => [].concat(v||[]).map(x => typeof x==='string' ? x : (x && x['@id'])).filter(Boolean);
+const byId = id => S.crate['@graph'].find(n => n['@id']===id);
+const rootNode = () => S.crate && S.crate['@graph'].find(isRoot);
+
+// ---------- step 1: kinds ----------
+// second group of the dropdown: the studio runs the workflow itself, streams the log, and loads the crate when it ends
+const RUN_KINDS = [
+  {id:'nf', title:'A Nextflow pipeline', blurb:'We run your pipeline with the nf-fairscape plugin; the log streams in below and the crate loads when it finishes.', where:'Point at the folder that holds your main.nf.', go:'Run pipeline and build crate', stop:'/api/nextflow/stop/'},
+  {id:'smk', title:'A Snakemake workflow', blurb:'We run your workflow, then run the FAIRSCAPE reporter over the finished DAG; both logs stream in below and the crate loads at the end.', where:'Point at the folder that holds your Snakefile.', go:'Run workflow and build crate', stop:'/api/snakemake/stop/'},
+];
+// first group: things that already exist on disk (conversion plugins get inserted in front)
+const KINDS = [
+  {id:'open', title:'An RO-Crate I already have', blurb:'Open an existing ro-crate-metadata.json to look at it or fix it.', where:'Pick the crate folder or its ro-crate-metadata.json.', go:'Open crate'},
+  {id:'new', title:'Nothing yet — start from scratch', blurb:'Make an empty crate and add data, software and computations by hand.', where:'', go:'Create empty crate'},
+];
+function buildKinds(){
+  const plug = S.plugins.filter(p=>p.import).map(p=>({id:'plugin:'+p.name, title:p.title, blurb:p.blurb, where:'', go:'Build crate', plugin:p}));
+  const importKinds=[...plug, ...KINDS], all=[...importKinds, ...RUN_KINDS];
+  const sel=$('#kind'); sel.innerHTML='';
+  const group=(label,kinds)=>{ const g=document.createElement('optgroup'); g.label=label;
+    kinds.forEach(k=>{const o=document.createElement('option'); o.value=k.id; const ready=k.id==='nf'?S.nf&&S.nf.available:k.id==='smk'?S.smk&&S.smk.available:true; o.textContent=k.title+(ready?'':' (not set up yet)'); g.appendChild(o);}); sel.appendChild(g); };
+  group('Import a run you already have', importKinds);
+  group('Run a workflow live', RUN_KINDS);
+  sel.onchange=()=>selectKind(all.find(k=>k.id===sel.value));
+  S.kinds=all;
+  const ex=$('#exportPlugin');
+  S.plugins.filter(p=>p.export).forEach(p=>{const o=document.createElement('option');o.value=p.name;o.textContent=p.title;ex.appendChild(o);});
+  const demo=new URLSearchParams(location.search).get('demo');
+  const start = demo && all.find(k=>k.id==='plugin:'+demo) || all[0];
+  sel.value=start.id; selectKind(start);
+  if(demo) go(true);
+}
+function selectKind(k){
+  S.kind=k; $('#kindBlurb').textContent=k.blurb;
+  const main=$('#mainForm'), adv=$('#advForm'); main.innerHTML=''; adv.innerHTML=''; $('#sampleRow').innerHTML='';
+  $('#step2').classList.toggle('dim', k.id==='new'); $('#advBox').hidden=false;
+  let mainFields=[], advFields=[];
+  if (k.plugin){
+    k.plugin.options.forEach(f=>{
+      if (META.includes(f.name)) return;                         // covered by step 3
+      if (f.name==='source' || f.lookup) mainFields.push(f); else advFields.push(f);
+    });
+    const src=k.plugin.options.find(f=>f.name==='source');
+    $('#whereLead').textContent = 'Point at the file or folder. Use Browse… if you are not sure of the path.';
+    if (k.plugin.sample){ const b=document.createElement('button'); b.className='link'; b.textContent='No file handy? Try the built-in sample'; b.onclick=()=>go(true); $('#sampleRow').appendChild(b); }
+  } else if (k.id==='nf'){
+    $('#whereLead').textContent=k.where;
+    (S.nf?S.nf.fields:[]).forEach(f=>{ if(META.includes(f.name)) return; if(f.name==='pipeline') mainFields.push(f); else advFields.push(f); });
+    if (S.nf && S.nf.example){ const b=document.createElement('button'); b.className='link'; b.textContent='No pipeline handy? Use the slow letters-chain example (three steps, ~12 s each)'; b.onclick=()=>{ main.querySelector('[name=pipeline]').value=S.nf.example; }; $('#sampleRow').appendChild(b); }
+    if (S.nf && !S.nf.available){ const h=document.createElement('p'); h.className='hint'; h.style.color='var(--danger)'; h.textContent='Nextflow is not ready on this machine: '+S.nf.reason; $('#sampleRow').appendChild(h); }
+  } else if (k.id==='smk'){
+    $('#whereLead').textContent=k.where;
+    (S.smk?S.smk.fields:[]).forEach(f=>{ if(META.includes(f.name)) return; if(f.name==='workflow') mainFields.push(f); else advFields.push(f); });
+    if (S.smk && S.smk.example){ const b=document.createElement('button'); b.className='link'; b.textContent='No workflow handy? Use the variant-calling example'; b.onclick=()=>{ main.querySelector('[name=workflow]').value=S.smk.example; }; $('#sampleRow').appendChild(b); }
+    if (S.smk && !S.smk.available){
+      const h=document.createElement('p'); h.className='hint'; h.style.color='var(--danger)';
+      h.textContent='Snakemake is not ready on this machine: '+S.smk.reason; $('#sampleRow').appendChild(h);
+      if (S.smk.version && !S.smk.reporter_installed){
+        const fix=document.createElement('button'); fix.className='link';
+        fix.textContent='Install the reporter into that environment ('+S.smk.install_command+')';
+        fix.onclick=()=>installReporter(fix); $('#sampleRow').appendChild(fix);
+      }
+    }
+  } else if (k.id==='open'){
+    $('#whereLead').textContent=k.where;
+    mainFields.push({name:'path', label:'Crate folder or ro-crate-metadata.json', type:'path', required:true});
+    $('#advBox').hidden=true;
+  } else { $('#whereLead').textContent='Nothing to point at — just describe it below.'; $('#advBox').hidden=true; }
+  renderForm(main, mainFields, true); renderForm(adv, advFields, false);
+  $('#advBox').hidden = $('#advBox').hidden || advFields.length===0;
+  $('#btnGo').textContent=k.go;
+  $('#step3').classList.remove('dim');
+}
+function renderForm(form, fields, main){
+  fields.forEach(f=>{
+    const wrap=document.createElement('div');
+    const lab=document.createElement('label'); lab.textContent=f.label + (f.required?'':''); wrap.appendChild(lab);
+    let inp;
+    if (f.type==='bool'){ inp=document.createElement('input'); inp.type='checkbox'; inp.checked=!!f.default; lab.prepend(inp); lab.style.display='flex'; lab.style.gap='8px'; lab.style.alignItems='center'; lab.style.fontWeight='400'; }
+    else if (f.type==='text'){ inp=document.createElement('textarea'); inp.value=f.default||''; wrap.appendChild(inp); }
+    else if (f.type==='select'){ inp=document.createElement('select'); (f.choices||[]).forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;inp.appendChild(o);}); inp.value=f.default||''; wrap.appendChild(inp); }
+    else if (['path','dir','file'].includes(f.type)){
+      const fi=document.createElement('div'); fi.className='fileinput';
+      inp=document.createElement('input'); inp.type='text'; inp.value=f.default||''; inp.placeholder=f.placeholder||'';
+      const b=document.createElement('button'); b.type='button'; b.textContent='Browse…'; b.onclick=()=>browse(inp, f.type);
+      fi.append(inp,b); wrap.appendChild(fi);
+    } else if (f.lookup){
+      const fi=document.createElement('div'); fi.className='fileinput';
+      inp=document.createElement('input'); inp.type='text'; inp.value=f.default??''; inp.placeholder=f.placeholder||'leave blank to pick automatically'; inp.setAttribute('list','dl-'+f.name);
+      const dl=document.createElement('datalist'); dl.id='dl-'+f.name;
+      const b=document.createElement('button'); b.type='button'; b.textContent='Look up';
+      b.onclick=async()=>{ const src=$('#mainForm [name=source]'); if(!src||!src.value){alert('Fill in the file or folder first.');return;}
+        b.disabled=true; b.textContent='…';
+        try{ const r=await api('/api/lookup/'+f.lookup+'?source='+encodeURIComponent(src.value)); dl.innerHTML=''; r.choices.forEach(c=>{const o=document.createElement('option');o.value=c;dl.appendChild(o);});
+          if(r.choices.length===1) inp.value=r.choices[0]; else if(r.choices.length===0) alert('No experiments found in that store.'); else { inp.focus(); inp.placeholder='choose: '+r.detail.join(' | '); }
+        }catch(e){ alert(e.message); } b.disabled=false; b.textContent='Look up'; };
+      fi.append(inp,b,dl); wrap.appendChild(fi);
+    } else { inp=document.createElement('input'); inp.type='text'; inp.value=f.default??''; inp.placeholder=f.placeholder||''; wrap.appendChild(inp); }
+    inp.name=f.name; inp.dataset.type=f.type;
+    if (f.help){ const h=document.createElement('div'); h.className='hint'; h.textContent=f.help; wrap.appendChild(h); }
+    form.appendChild(wrap);
+  });
+}
+function formValues(form){
+  const out={};
+  form.querySelectorAll('[name]').forEach(el=>{
+    if (el.dataset.type==='bool') out[el.name]=el.checked;
+    else if (el.value!=='') out[el.name]=el.value;
+  });
+  return out;
+}
+
+// ---------- file browser ----------
+async function browse(input, kind){
+  let cur = input.value && input.value.trim() ? input.value : (S.homeDir||'/');
+  const ov=document.createElement('div'); ov.className='browser';
+  ov.innerHTML=`<div class="box"><div class="row"><input type="text" id="bPath"><button id="bUp">Up one level</button></div><ul id="bList"></ul><div class="row"><span class="hint">${kind==='dir'?'Open the folder you want, then click "Use this folder".':'Click a file to pick it, or open a folder and click "Use this folder".'}</span></div><div class="row"><button id="bChoose" class="primary">Use this folder</button><button id="bCancel">Cancel</button></div></div>`;
+  document.body.appendChild(ov);
+  const list=ov.querySelector('#bList'), pathEl=ov.querySelector('#bPath');
+  async function go(p){
+    const r = await api('/api/fs?path='+encodeURIComponent(p)); cur=r.path; pathEl.value=cur; list.innerHTML='';
+    r.entries.forEach(e=>{ const li=document.createElement('li'); li.textContent=(e.dir?'📁 ':'📄 ')+e.name; li.className=e.dir?'dir':(kind==='dir'?'':'pick'); li.onclick=()=>{ if(e.dir) go(cur.replace(/\/$/,'')+'/'+e.name); else if(kind!=='dir'){ input.value=cur.replace(/\/$/,'')+'/'+e.name; ov.remove(); } }; list.appendChild(li); });
+    if(!r.entries.length){ const li=document.createElement('li'); li.textContent='(empty folder)'; list.appendChild(li); }
+  }
+  ov.querySelector('#bUp').onclick=()=>go(cur.replace(/\/[^/]*\/?$/,'')||'/');
+  pathEl.onchange=()=>go(pathEl.value);
+  ov.querySelector('#bChoose').onclick=()=>{ input.value=cur; ov.remove(); };
+  ov.querySelector('#bCancel').onclick=()=>ov.remove();
+  try { await go(cur); } catch(e){ await go(S.homeDir||'/'); }
+}
+
+// ---------- the big button ----------
+async function applyMeta(crate, path){
+  const m=formValues($('#metaForm')); const root=crate['@graph'].find(n=>{ const d=crate['@graph'].find(x=>x['@id']==='ro-crate-metadata.json'); return d && d.about && (d.about['@id']||d.about)===n['@id']; });
+  if(!root) return;
+  let changed=false;
+  for (const k of ['name','description','author']) if (m[k] && root[k]!==m[k]) { root[k]=m[k]; changed=true; }
+  if (m.keywords) { root.keywords=m.keywords.split(',').map(s=>s.trim()).filter(Boolean); changed=true; }
+  if (changed && path) { try{ await post('/api/save',{crate,path}); }catch(e){} }
+}
+async function go(useSample){
+  const k=S.kind; const log=$('#runLog'); const btn=$('#btnGo');
+  const show=(cls,text)=>{ log.hidden=false; log.className='log '+cls; log.textContent=text; log.scrollIntoView({block:'nearest'}); };
+  btn.disabled=true;
+  try{
+    if (k.plugin){
+      show('', 'Working on it…'); $('#status').textContent='Building crate from '+k.plugin.title+'…';
+      const opts={...formValues($('#mainForm')), ...formValues($('#advForm'))};
+      const meta=formValues($('#metaForm')); for (const f of k.plugin.options) if (META.includes(f.name) && meta[f.name]) opts[f.name]=meta[f.name];
+      const r = await post('/api/convert', {plugin:k.plugin.name, options:opts, sample:!!useSample});
+      await applyMeta(r.crate, r.crate_path); setCrate(r.crate, r.crate_path);
+      show('ok', (r.log||'done') + '\n\nYour crate is on the right. Click any box to check it, then Save.');
+    } else if (k.id==='nf'){
+      const form={...formValues($('#mainForm')), ...formValues($('#advForm')), ...formValues($('#metaForm'))};
+      if(!form.pipeline) throw new Error('Point at the pipeline folder first.');
+      show('', 'Starting Nextflow… this can take a while. The run log appears below.'); $('#status').textContent='Running Nextflow…';
+      const r=await post('/api/nextflow/run',form);
+      await streamJob('/api/nextflow/log/'+r.job, 'Nextflow', k.stop+r.job);
+    } else if (k.id==='smk'){
+      const form={...formValues($('#mainForm')), ...formValues($('#advForm')), ...formValues($('#metaForm'))};
+      if(!form.workflow) throw new Error('Point at the workflow folder first.');
+      const steps=(await post('/api/snakemake/plan',form)).steps.map(c=>'$ '+c.join(' ')).join('\n');
+      show('', 'Starting Snakemake… the run log appears below.\n\n'+steps); $('#status').textContent='Running Snakemake…';
+      const r=await post('/api/snakemake/run',form);
+      await streamJob('/api/snakemake/log/'+r.job, 'Snakemake', k.stop+r.job);
+    } else if (k.id==='open'){
+      const p=formValues($('#mainForm')).path; if(!p) throw new Error('Pick the crate folder first.');
+      const r=await post('/api/open',{path:p}); setCrate(r.crate,r.crate_path); show('ok','Opened '+r.crate_path);
+    } else {
+      const m=formValues($('#metaForm'));
+      const r=await post('/api/new',{name:m.name||'',author:m.author||'',description:m.description||''}); await applyMeta(r.crate,null); setCrate(r.crate,null);
+      show('ok','Empty crate created. Use "+ Add entity" above the map to add data, software and computations.');
+    }
+  }catch(e){ if(!log.className.includes('err')){ show('err', e.message); } $('#status').textContent='✗ '+e.message.split('\n')[0].slice(0,140); }
+  btn.disabled=false;
+}
+// one line of a run log -> what the status bar should say, or null if it says nothing new
+function progressOf(line, what, st){
+  let m;
+  if (line.startsWith('$ ')) { st.tasks=0; st.phase = /--reporter/.test(line) ? 'building the crate from the finished run' : /pip install/.test(line) ? 'installing' : 'running'; return `${what}: ${st.phase}…`; }
+  if ((m=line.match(/^(\d+) of (\d+) steps \((\d+)%\) done/))) return `${what}: ${m[1]} of ${m[2]} steps done (${m[3]}%)`;
+  if ((m=line.match(/^\[PROCESS [0-9a-f]{2}\/[0-9a-f]+\] (.+)$/)) || (m=line.match(/^\[[0-9a-f]{2}\/[0-9a-f]+\] Submitted process > (.+)$/))) { st.tasks++; return `${what}: ${st.tasks} task${st.tasks===1?'':'s'} started, latest ${m[1]}`; }
+  if ((m=line.match(/^(?:localrule|rule|checkpoint) (\w+):/))) return `${what}: running ${m[1]}…`;
+  if (/^\[SUCCESS\]|^Completed at:|^Report created/.test(line)) return `${what}: finishing, writing the crate…`;
+  // fairscape-artifacts all: what it is doing, from the lines it prints
+  if (/^loading crate:|^root graph:/.test(line)) return `${what}: reading the crate, building the evidence graph…`;
+  if ((m=line.match(/^criterion (\S+) (.+)$/))) return `${what}: review — criterion ${m[1]} ${m[2]}…`;
+  if (/^wrote .*evidence-graph\.json$/.test(line)) return `${what}: evidence graph done, rendering the datasheet and previews…`;
+  if (/^wrote .*ro-crate-preview\.html$/.test(line)) return `${what}: previews done, running the AI-readiness review…`;
+  if (/^wrote .*ai-ready-review\.html$/.test(line)) return `${what}: review done, finishing the datasheet…`;
+  if (/^wrote .*ro-crate-datasheet\.html$/.test(line)) return `${what}: datasheet written…`;
+  if (/^wrote .*ai-ready-improve\.html$/.test(line)) return `${what}: improvements form written…`;
+  return null;
+}
+function streamJob(url, what='the run', stopUrl=null){
+  const log=$('#runLog'), stop=$('#btnStop'), st={tasks:0};
+  stop.hidden=!stopUrl; stop.disabled=false; stop.textContent='Stop the run';
+  if (stopUrl) stop.onclick=async()=>{ stop.disabled=true; stop.textContent='Stopping…'; try{ await post(stopUrl,{}); }catch(e){ alert(e.message); stop.disabled=false; } };
+  return new Promise((resolve,reject)=>{ const es=new EventSource(url);
+    const end=()=>{ es.close(); stop.hidden=true; };
+    es.onmessage=ev=>{ const m=JSON.parse(ev.data);
+      if(m.line){ log.textContent+='\n'+m.line; log.scrollTop=log.scrollHeight; const p=progressOf(m.line, what, st); if(p) $('#status').textContent=p; }
+      if(m.done){ end(); if(m.crate){ log.className='log ok'; log.textContent+='\n\nDone — your crate is on the right. Click any box to check it, then Save.'; log.scrollTop=log.scrollHeight; applyMeta(m.crate,m.crate_path).then(()=>{ setCrate(m.crate,m.crate_path); resolve(m); }); }
+        else if(m.ok){ log.className='log ok'; log.scrollTop=log.scrollHeight; resolve(m); }   // a job that ends without a crate: an install, an artifacts build
+        else { log.className='log err'; if(m.error) log.textContent+='\n'+m.error; $('#status').textContent='✗ '+(m.error||'the run did not produce a crate'); reject(new Error(m.error||'run failed — see log')); } } };
+    es.onerror=()=>{ end(); reject(new Error('lost connection to the run')); }; });
+}
+async function installReporter(btn){
+  btn.disabled=true; const log=$('#runLog'); log.hidden=false; log.className='log'; log.textContent='installing the reporter…';
+  try{
+    const r=await post('/api/snakemake/install',{});
+    await streamJob('/api/snakemake/log/'+r.job, 'pip').catch(()=>{});
+    S.smk=await api('/api/snakemake/info');
+    buildKinds(); $('#kind').value='smk'; selectKind(S.kinds.find(k=>k.id==='smk'));
+    log.className=S.smk.available?'log ok':'log err';
+  }catch(e){ log.className='log err'; log.textContent+='\n'+e.message; }
+  btn.disabled=false;
+}
+$('#btnGo').onclick=()=>go(false);
+
+// ---------- crate / graph ----------
+function setCrate(crate, path){
+  S.crate=crate; S.cratePath=path||null; S.selected=null; S.problems={}; S.improve=null; S.built=false; S.estimate=null;
+  $('#empty').hidden=true; $('#btnRoot').hidden=false; /* $('#btnValidate').disabled=false; */ $('#btnSave').disabled=false; $('#exportPlugin').disabled=false;
+  const root = rootNode();
+  const t=$('#crateTitle'); t.hidden=false; t.textContent=(root&&root.name)||'untitled crate';
+  vb=null; draw(true); closeDrawer(); updateStatus(); artifactLinks();
+}
+// the Artifacts dropdown: every page/file found next to the saved crate opens in a
+// new tab; the last entry runs fairscape-artifacts' `all` build (evidence graph,
+// previews, datasheet, AI-readiness review, then the improvements form) — or, when
+// that package is missing from the studio's environment, installs it first
+async function artifactLinks(){
+  const sel=$('#artifacts'); sel.innerHTML='<option value="">Artifacts ▾</option>'; sel.hidden=!S.crate; if(!S.crate) return;
+  const add=(v,t)=>{ const o=document.createElement('option'); o.value=v; o.textContent=t; sel.appendChild(o); };
+  let r={items:[],built:false,estimate:null};
+  if (S.cratePath){ try{ r=await api('/api/artifacts?path='+encodeURIComponent(S.cratePath)); }catch(e){} }
+  S.built=r.built; S.estimate=r.estimate;
+  r.items.forEach(i=>add('open:'+i.path, i.label+' ↗'));
+  if (!S.art || !S.art.installed) add('install', 'Build all artifacts (install fairscape-artifacts first)…');
+  else add('build', r.built ? 'Rebuild all artifacts & re-score…' : 'Build all artifacts…');
+  if (S.cratePath) loadImprove(); else renderImprove();
+}
+$('#artifacts').onchange=()=>{ const sel=$('#artifacts'), v=sel.value; sel.value=''; if(!v) return;
+  if (v.startsWith('open:')) window.open('/api/file?path='+encodeURIComponent(v.slice(5)),'_blank'); else if (v==='build') buildArtifacts(); else if (v==='install') installArtifacts(); };
+// a small confirm box with the one option that matters: whether the review may go online
+function confirmBuild(){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div'); ov.className='browser dlg';
+    const what = S.built ? 'Rebuild all artifacts & re-score' : 'Build all artifacts';
+    ov.innerHTML=`<div class="box"><b>${what}</b>
+      <p>Runs <code>fairscape-artifacts all</code> on the saved crate: the evidence graph, a crate preview, the datasheet and the AI-readiness review with its improvements form land next to <code>ro-crate-metadata.json</code>.</p>
+      <p class="hint">${S.built ? 'Existing pages are overwritten — including a ro-crate-datasheet.html a workflow plugin may have written. ' : ''}Only files are added; the crate itself is not changed.</p>
+      <label><input type="checkbox" id="bNet"><span>Also check identifiers and URLs online <span class="hint">(better evidence for the FAIRness and repository criteria; slower, needs a connection)</span></span></label>
+      <div class="row"><button id="bGo" class="primary">${what}</button><button id="bNo">Cancel</button></div></div>`;
+    document.body.appendChild(ov);
+    ov.querySelector('#bGo').onclick=()=>{ const net=ov.querySelector('#bNet').checked; ov.remove(); resolve({network:net}); };
+    ov.querySelector('#bNo').onclick=()=>{ ov.remove(); resolve(null); };
+  });
+}
+function estimateLine(est, prev){
+  const head = prev && prev.total!==est.total ? `AI-readiness estimate ${prev.total} → ${est.total} of ${est.max}` : `AI-readiness estimate ${est.total}/${est.max}`;
+  return head+'  —  '+est.sections.map(x=>`${x.title} ${x.score}/${x.max}`).join(' · ');
+}
+async function buildArtifacts(){
+  if(!S.cratePath){ alert('Save the crate first — the build reads the crate folder on disk, so unsaved edits would not count.'); return; }
+  const choice=await confirmBuild(); if(!choice) return;
+  const st=$('#status'), prev=st.textContent, sel=$('#artifacts'); sel.disabled=true;
+  const log=$('#runLog'); log.hidden=false; log.className='log'; log.textContent='Building artifacts for '+S.cratePath+(choice.network?' (with online checks)':'')+'…';
+  st.textContent='Artifacts: starting…';
+  try{
+    const r=await post('/api/artifacts/build',{path:S.cratePath, network:choice.network});
+    const m=await streamJob('/api/artifacts/log/'+r.job, 'Artifacts', '/api/artifacts/stop/'+r.job);
+    await artifactLinks();
+    if (m.estimate){
+      st.textContent=estimateLine(m.estimate, m.previous)+'  —  open the review page under Artifacts to score it properly';
+      st.title='Mechanical estimate only: the rubric rules applied to the evidence the grader found. The review page has the evidence and lets you (or a model) set the real scores.';
+    } else { st.textContent='Artifacts built (no AI-readiness review: the grader is not installed in the studio\'s environment)'; }
+    const open=(m.written||{}).datasheet||(m.written||{}).review; if(open) window.open('/api/file?path='+encodeURIComponent(open),'_blank');
+    log.textContent+='\n\nDone — the pages are under Artifacts ▾ above the map.'; log.scrollTop=log.scrollHeight;
+  }catch(e){ st.textContent='✗ '+e.message.split('\n')[0].slice(0,140); if(!log.className.includes('err')){ log.className='log err'; log.textContent+='\n'+e.message; } }
+  sel.disabled=false;
+}
+async function installArtifacts(){
+  if(!confirm('fairscape-artifacts is not installed in the studio\'s environment. Install it now?\n\n'+(S.art?S.art.install_command:'pip install fairscape-artifacts'))) return;
+  const sel=$('#artifacts'); sel.disabled=true;
+  const log=$('#runLog'); log.hidden=false; log.className='log'; log.textContent='installing fairscape-artifacts…';
+  try{
+    const r=await post('/api/artifacts/install',{});
+    await streamJob('/api/artifacts/log/'+r.job, 'pip');
+    S.art=await api('/api/artifacts/info');
+    await artifactLinks();
+    $('#status').textContent = S.art.installed ? 'fairscape-artifacts installed — choose Build all artifacts… under Artifacts ▾' : '✗ fairscape-artifacts still does not import; see the log on the left';
+  }catch(e){ log.className='log err'; log.textContent+='\n'+e.message; }
+  sel.disabled=false;
+}
+function updateStatus(){
+  const g=S.crate['@graph']; const counts={};
+  g.forEach(n=>{const k=kindOf(n); if(k!=='descriptor'&&k!=='root') counts[k]=(counts[k]||0)+1;});
+  const nice={dataset:'data',software:'software',computation:'computations',mlmodel:'models',schema:'schemas',other:'other'};
+  $('#status').textContent = Object.entries(counts).map(([k,v])=>`${v} ${nice[k]||k}`).join(' · ') + (S.cratePath?'  —  saved at '+S.cratePath:'  —  not saved yet');
+  $('#status').title = S.cratePath ? (S.built ? 'Saved. Artifacts ▾ › Rebuild all artifacts & re-score grades the saved crate again.' : 'Saved. Artifacts ▾ › Build all artifacts… makes the datasheet, evidence graph and AI-readiness review.') : 'Unsaved edits: the artifacts build and the Improve ranking read the crate folder on disk, so save first.';
+}
+function buildLayout(){
+  const g=S.crate['@graph'].filter(n=>kindOf(n)!=='descriptor');
+  const ids=new Set(g.map(n=>n['@id']));
+  const edges=[];
+  g.forEach(n=>{
+    refIds(n.usedDataset).concat(refIds(n.usedSoftware),refIds(n.usedMLModel)).forEach(t=>ids.has(t)&&edges.push({from:t,to:n['@id'],prop:'used'}));
+    refIds(n.generatedBy).forEach(t=>ids.has(t)&&edges.push({from:t,to:n['@id'],prop:'produced'}));
+    refIds(n.generated).forEach(t=>ids.has(t)&&edges.push({from:n['@id'],to:t,prop:'produced'}));
+    refIds(n.annotates).forEach(t=>ids.has(t)&&edges.push({from:n['@id'],to:t,prop:'describes'}));
+  });
+  const seen=new Set(); const E=edges.filter(e=>{const k=e.from+'>'+e.to; if(seen.has(k))return false; seen.add(k); return true;});
+  const rank={}; g.forEach(n=>rank[n['@id']]=0);
+  for(let i=0;i<g.length;i++){ let ch=false; E.forEach(e=>{ if(rank[e.to] < rank[e.from]+1){ rank[e.to]=rank[e.from]+1; ch=true; } }); if(!ch)break; }
+  const connected=new Set(E.flatMap(e=>[e.from,e.to]));
+  const maxRank=Math.max(0,...Object.values(rank));
+  g.forEach(n=>{ if(!connected.has(n['@id'])){ rank[n['@id']] = kindOf(n)==='root'?0:maxRank+1; } });
+  const cols={}; g.forEach(n=>{(cols[rank[n['@id']]]=cols[rank[n['@id']]]||[]).push(n);});
+  const W=200,H=58,GX=120,GY=24; const pos={};
+  const colKeys=Object.keys(cols).map(Number).sort((a,b)=>a-b);
+  let maxH=0; colKeys.forEach(c=>maxH=Math.max(maxH,cols[c].length));
+  colKeys.forEach((c,ci)=>{
+    const col=cols[c]; col.sort((a,b)=>kindOf(a).localeCompare(kindOf(b))||label(a).localeCompare(label(b)));
+    const total=col.length*(H+GY); const y0=(maxH*(H+GY)-total)/2;
+    col.forEach((n,i)=>pos[n['@id']]={x:40+ci*(W+GX),y:40+y0+i*(H+GY),w:W,h:H});
+  });
+  S.layout={pos,edges:E,nodes:g,width:40+colKeys.length*(W+GX),height:80+maxH*(H+GY)};
+}
+function draw(refit){
+  buildLayout();
+  const {pos,edges,nodes}=S.layout; const view=$('#view'); view.innerHTML='';
+  const NS='http://www.w3.org/2000/svg'; const el=(t,a={})=>{const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e;};
+  edges.forEach(e=>{
+    const a=pos[e.from],b=pos[e.to]; if(!a||!b)return;
+    const x1=a.x+a.w,y1=a.y+a.h/2,x2=b.x,y2=b.y+b.h/2; const mx=(x1+x2)/2;
+    const p=el('path',{d:`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`,class:'edge'+((S.selected===e.from||S.selected===e.to)?' highlight':'')});
+    view.appendChild(p);
+    const t=el('text',{x:mx,y:(y1+y2)/2-4,class:'edgelabel','text-anchor':'middle'}); t.textContent=e.prop; view.appendChild(t);
+  });
+  const nice={dataset:'Data',software:'Software',computation:'Computation',mlmodel:'Model',schema:'Schema',root:'The crate',other:''};
+  nodes.forEach(n=>{
+    const p=pos[n['@id']]; const k=kindOf(n);
+    const g=el('g',{class:'node'+(S.selected===n['@id']?' selected':''),transform:`translate(${p.x},${p.y})`});
+    g.appendChild(el('rect',{width:p.w,height:p.h,fill:color(k)}));
+    const t1=el('text',{x:12,y:22,class:'type'}); t1.textContent=(nice[k]||typesOf(n).join(', ')) + (S.problems[n['@id']]?'   ⚠ needs attention':''); g.appendChild(t1);
+    const t2=el('text',{x:12,y:43,'font-weight':'600'}); t2.textContent=label(n); g.appendChild(t2);
+    if(k==='root'){ g.appendChild(el('rect',{width:p.w,height:p.h,fill:'none',stroke:'#111827',rx:9,'stroke-width':2,'stroke-dasharray':'5 3'})); }
+    const title=el('title'); title.textContent=(n.name||n['@id'])+'\n'+(n.description||''); g.appendChild(title);
+    g.onclick=(ev)=>{ev.stopPropagation(); select(n['@id']);};
+    view.appendChild(g);
+  });
+  if(refit || !vb) fit(); else applyVB();
+}
+let vb=null;
+function fit(){ const L=S.layout; const svg=$('#svg'); const r=svg.getBoundingClientRect(); if(!r.width)return;
+  const sc=Math.min(r.width/L.width, r.height/L.height, 1.3); const w=r.width/sc,h=r.height/sc;
+  vb={x:-(w-L.width)/2, y:-(h-L.height)/2, w, h}; applyVB(); }
+function applyVB(){ $('#svg').setAttribute('viewBox',`${vb.x} ${vb.y} ${vb.w} ${vb.h}`); }
+$('#btnFit').onclick=()=>fit();
+function editRoot(){ const r=rootNode(); if(r) select(r['@id']); }
+$('#btnRoot').onclick=editRoot; $('#crateTitle').onclick=editRoot;
+(function pz(){ const svg=$('#svg'); let drag=null;
+  svg.addEventListener('wheel',e=>{ if(!vb)return; e.preventDefault(); const f=e.deltaY>0?1.1:0.9; const r=svg.getBoundingClientRect(); const mx=vb.x+(e.clientX-r.left)/r.width*vb.w, my=vb.y+(e.clientY-r.top)/r.height*vb.h; vb={x:mx-(mx-vb.x)*f,y:my-(my-vb.y)*f,w:vb.w*f,h:vb.h*f}; applyVB(); },{passive:false});
+  svg.addEventListener('mousedown',e=>{ if(!vb||e.button!==0)return; drag={x:e.clientX,y:e.clientY,vx:vb.x,vy:vb.y,moved:false}; });
+  window.addEventListener('mousemove',e=>{ if(!drag)return; if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>3) drag.moved=true; const r=svg.getBoundingClientRect(); vb.x=drag.vx-(e.clientX-drag.x)/r.width*vb.w; vb.y=drag.vy-(e.clientY-drag.y)/r.height*vb.h; applyVB(); });
+  window.addEventListener('mouseup',()=>drag=null);
+  let panned=false; window.addEventListener('mouseup',()=>{ panned=!!(drag&&drag.moved); });
+  svg.addEventListener('click',e=>{ if(panned){ panned=false; return; } if(e.target===svg||e.target.id==='view'){ select(null);} });
+})();
+let lastSize=null;
+new ResizeObserver(()=>{ if(!S.layout||!vb) return; const r=$('#svg').getBoundingClientRect(); if(!r.width) return;
+  if(lastSize){ const sc=lastSize.w/vb.w; vb.w=r.width/sc; vb.h=r.height/sc; applyVB(); }
+  lastSize={w:r.width,h:r.height}; }).observe($('#canvas'));
+
+// ---------- drawer (slide-out editor) ----------
+const drawer=$('#drawer');
+function openDrawer(){ drawer.classList.add('open'); }
+function closeDrawer(){ drawer.classList.remove('open','max'); S.selected=null; if(S.crate) draw(); }
+$('#btnClose').onclick=closeDrawer;
+$('#btnMax').onclick=()=>drawer.classList.toggle('max');
+(function resize(){ const h=$('#handle'); let start=null;
+  h.addEventListener('mousedown',e=>{ start={x:e.clientX,w:drawer.getBoundingClientRect().width}; drawer.classList.remove('max'); drawer.style.transition='none'; e.preventDefault(); });
+  window.addEventListener('mousemove',e=>{ if(!start)return; const w=Math.max(300,Math.min(window.innerWidth*0.7,start.w+(start.x-e.clientX))); document.documentElement.style.setProperty('--drawer',w+'px'); });
+  window.addEventListener('mouseup',()=>{ if(start){ start=null; drawer.style.transition=''; } });
+})();
+
+// ---------- editor ----------
+const HIDDEN=new Set(['@id','@type','@context']);
+const NICE_KEY={name:'Name',description:'Description',author:'Author',keywords:'Keywords',license:'License',version:'Version',dateCreated:'Date created',datePublished:'Date published',dateModified:'Date modified',format:'File format',contentUrl:'File location',url:'Web link',command:'Command run',runBy:'Run by',usedDataset:'Used this data',usedSoftware:'Used this software',usedMLModel:'Used this model',generatedBy:'Made by',generated:'Produced',hasPart:'Contains',isPartOf:'Part of',contentSize:'Size',md5:'MD5 checksum',identifier:'Identifier',publisher:'Publisher',conformsTo:'Conforms to',additionalProperty:'Extra properties',parameter:'Parameters',startTime:'Started',endTime:'Finished'};
+function fieldMeta(kind, key){ for(const g of (S.fields&&S.fields[kind])||[]) for(const f of g.fields) if(f.key===key) return f; return null; }
+function isFilled(v){ return !(v===undefined || v==='' || v===null || (Array.isArray(v)&&v.length===0)); }
+function addField(n, f){
+  if(!(f.key in n) || !isFilled(n[f.key])) n[f.key] = f.kind==='bool'?false : f.kind==='int'?0 : '';   // list-or-string fields accept plain text
+  select(n['@id']); touched();
+  const row=[...document.querySelectorAll('#edFields .kv')].find(r=>r.querySelector('.k').dataset.key===f.key);
+  if(row){ row.scrollIntoView({block:'center'}); const inp=row.querySelector('textarea,input'); if(inp) inp.focus(); }
+}
+function renderAiReady(n, kind){
+  const box=$('#aireadyGroups'); box.innerHTML='';
+  const groups=(S.fields&&S.fields[kind])||[];
+  $('#aiready').dataset.empty = groups.length===0 ? '1' : '0';
+  $('#aireadyLead').innerHTML = kind==='root'
+    ? 'This is where the AI-Ready score comes from. Work down the groups; each one tells you how many are filled in. Click <b>Add</b> to answer one.'
+    : 'Extra details FAIRSCAPE can record for this box. Click <b>Add</b> to fill one in.';
+  groups.forEach((g,gi)=>{
+    const filled=g.fields.filter(f=>isFilled(n[f.key])).length;
+    const d=document.createElement('details'); d.className='grp';
+    const autoOpen = kind==='root' ? (filled<g.fields.length && !g.title.startsWith('Computed') && gi<3) : false;
+    if(autoOpen) d.open=true;
+    d.innerHTML=`<summary>${g.title}<span class="cnt ${filled===g.fields.length?'done':''}">${filled} / ${g.fields.length}</span></summary>`+(g.blurb?`<div class="blurb">${g.blurb}</div>`:'');
+    g.fields.forEach(f=>{
+      const r=document.createElement('div'); r.className='frow'+(f.required?' req':'');
+      const have=isFilled(n[f.key]);
+      r.innerHTML=`<div class="t"><b>${f.label}</b><small class="clamp" title="${f.help.replace(/"/g,'&quot;')}">${f.help||''}</small></div>`+(have?`<span class="have">✓ filled</span>`:`<button>Add</button>`);
+      if(!have) r.querySelector('button').onclick=()=>addField(n,f);
+      else r.onclick=()=>{ const row=[...document.querySelectorAll('#edFields .kv')].find(x=>x.querySelector('.k').dataset.key===f.key); if(row) row.scrollIntoView({block:'center'}); };
+      d.appendChild(r);
+    });
+    box.appendChild(d);
+  });
+}
+// ---------- the Improve view: the grader's quick-wins catalogue ranked by the last build ----------
+async function loadImprove(){
+  if(!S.cratePath) return;
+  try{ S.improve=await api('/api/improve?path='+encodeURIComponent(S.cratePath)); }catch(e){ S.improve={error:e.message}; }
+  renderImprove();
+}
+function setView(v){ S.view=v; document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on', b.dataset.view===v)); $('#aiready').hidden = v!=='all' || $('#aiready').dataset.empty==='1'; $('#improve').hidden = v!=='improve'; if(v==='improve') renderImprove(); }
+document.querySelectorAll('#viewSeg button').forEach(b=>b.onclick=()=>setView(b.dataset.view));
+const critNote = c => `${c.id}${c.name?' '+c.name:''}${c.score===null||c.score===undefined?' (not scored)':` (now ${c.score}/2)`}`;
+function improveAdd(item){
+  const n=byId(item.target['@id']); if(!n){ alert('That box is no longer in the crate.'); return; }
+  addField(n, {key:item.property, kind: item.type==='bool'?'bool' : item.type==='number'?'int' : 'str'});
+}
+// "lifts 0.a Findable (now 1/2), 5.a …" — which of the row's criteria are short
+function liftText(item){
+  const short=item.criteria.filter(c=>item.lifts.includes(c.id));
+  if (item.lifts.length) return 'lifts '+short.map(c=>`<span class="short">${critNote(c)}</span>`).join(', ');
+  return S.improve && !S.improve.needs_grade ? 'its criteria ('+item.criteria.map(c=>c.id).join(', ')+') already score 2/2' : 'feeds '+item.criteria.map(c=>c.id).join(', ');
+}
+const rowTitle = item => `<b>${item.label}${item.win?'<span class="win">sure point</span>':''}</b>`;
+const rowHelp = item => `<small class="clamp" title="${(item.help||'').replace(/"/g,'&quot;')}">${item.help||''}</small>`;
+// one catalogue entry on one entity; compact = a line under a software property's head row
+function improveRow(item, compact){
+  const n=byId(item.target['@id']); const have = n ? isFilled(n[item.property]) : item.have;
+  const r=document.createElement('div'); r.className='frow'+(have?' done':'');
+  const terms = item.type==='terms';
+  r.innerHTML=`<div class="t">`+(compact?`<b>${item.target.name}</b>`:rowTitle(item)+`<small class="lift">${liftText(item)}</small>`+rowHelp(item))+`</div>`
+    +(have?`<span class="have">✓ filled</span>`: terms?`<span class="hint" title="Ontology terms are DefinedTerm entities — see Bigger jobs">needs entities</span>`:`<button>Add</button>`);
+  if(!have && !terms) r.querySelector('button').onclick=()=>improveAdd(item);
+  else if(have) r.onclick=()=>{ if(n) { select(n['@id']); const row=[...document.querySelectorAll('#edFields .kv')].find(x=>x.querySelector('.k').dataset.key===item.property); if(row) row.scrollIntoView({block:'center'}); } };
+  return r;
+}
+// a software property applies to every Software box: one head row with the tally, then a line per box
+function softwareHead(item, all){
+  const filled=all.filter(i=>{const n=byId(i.target['@id']); return n && isFilled(n[i.property]);}).length;
+  const r=document.createElement('div'); r.className='frow'+(filled===all.length?' done':'');
+  r.innerHTML=`<div class="t">${rowTitle(item)}<small class="lift">${liftText(item)} · on every Software box</small>${rowHelp(item)}</div><span class="have" style="color:var(--muted)">${filled} / ${all.length} software</span>`;
+  return r;
+}
+function renderImprove(){
+  const body=$('#improveBody'), lead=$('#improveLead'); if(!body) return;
+  body.innerHTML='';
+  const buildBtn=(t)=>{ const b=document.createElement('button'); b.className='primary'; b.style.marginTop='8px'; b.textContent=t; b.onclick=buildArtifacts; return b; };
+  const I=S.improve;
+  if(!S.crate){ lead.textContent=''; return; }
+  if(!I){ lead.innerHTML = S.cratePath ? 'Loading…' : '<b>Save the crate first</b>, then choose <b>Build all artifacts…</b> under Artifacts ▾ to get a grade. This list is ranked from that grade.'; return; }
+  if(I.error){ lead.textContent='Could not load the improvement list: '+I.error; return; }
+  if(I.needs_grade){ lead.innerHTML='<b>Build the artifacts to get a grade first.</b> The AI-readiness review says which criteria are short; this list is then ranked so the cheapest points come first. Until then, here is the catalogue by effort.'; body.appendChild(buildBtn(S.cratePath?'Build all artifacts…':'Save, then build all artifacts…')); }
+  else { const e=I.estimate; lead.innerHTML=`Ranked from the last build: estimate <b>${e.total}/${e.max}</b>${e.generated?' ('+e.generated.replace('T',' ').slice(0,16)+')':''}. Easy, sure points first; <b>Add</b> puts the field in the editor above. Save and <b>Rebuild &amp; re-score</b> (Artifacts ▾) to see the new estimate.`+(S.cratePath?'':' <i>You have unsaved edits — the ranking is from the saved crate.</i>'); }
+  const labels=I.effort_labels||{1:'Quick',2:'A sentence or two',3:'In depth'};
+  for (const eff of [1,2,3]){
+    const items=I.items.filter(i=>i.effort===eff && byId(i.target['@id']));
+    if(!items.length) continue;
+    // one row per root property; software properties collapse into one row per property with a box per Software entity
+    const rows=[]; const perProp={};
+    items.forEach(i=>{ if(i.target.kind==='root') rows.push({item:i}); else { if(!perProp[i.property]){ perProp[i.property]={item:i, all:[]}; rows.push(perProp[i.property]); } perProp[i.property].all.push(i); } });
+    const todo=rows.filter(r=> r.all ? r.all.some(i=>{const n=byId(i.target['@id']); return n && !isFilled(n[i.property]);}) : !isFilled((byId(r.item.target['@id'])||{})[r.item.property])).length;
+    const d=document.createElement('details'); d.className='grp'; d.open = eff===1 || (eff===2 && todo && !I.needs_grade);
+    d.innerHTML=`<summary>${labels[eff]}<span class="cnt ${todo?'todo':'done'}">${todo?todo+' to do':'all filled'}</span></summary>`;
+    rows.forEach(r=>{
+      if(!r.all){ d.appendChild(improveRow(r.item,false)); return; }
+      d.appendChild(softwareHead(r.item, r.all));
+      const sub=document.createElement('div'); sub.className='sublist'; r.all.forEach(i=>sub.appendChild(improveRow(i,true))); d.appendChild(sub);
+    });
+    body.appendChild(d);
+  }
+  if (I.bigger_jobs && I.bigger_jobs.length){
+    const d=document.createElement('details'); d.className='grp'; d.open=!I.needs_grade;
+    const n=I.bigger_jobs.filter(j=>j.short).length;
+    d.innerHTML=`<summary>Bigger jobs<span class="cnt ${n?'todo':'done'}">${n?n+' would help':'none needed'}</span></summary><div class="blurb">These need new entities, links, checksums or statistics — more than one field. Each is a skill you run in Claude Code on the saved crate; the editor here does not do them.</div>`;
+    I.bigger_jobs.forEach(j=>{
+      const r=document.createElement('div'); r.className='frow job'+(j.short?'':' done');
+      r.innerHTML=`<div class="t"><b>${j.title}</b><small class="lift">${j.short?'lifts ':'feeds '}${j.criteria.map(c=>`<span class="${c.score===null||c.score<2?'short':''}">${critNote(c)}</span>`).join(', ')}</small><small class="why">${j.why}</small>${j.note?`<small class="clamp" title="${j.note.replace(/"/g,'&quot;')}">${j.note}</small>`:''}${j.skill?`<small>Run <code>/${j.skill}</code> in Claude Code (AIreadiness-grader skills).</small>`:''}</div>`;
+      d.appendChild(r);
+    });
+    body.appendChild(d);
+  }
+}
+function select(id){ S.selected=id; draw(); showEditor(id); }
+function showEditor(id){
+  const n=id&&byId(id); if(!n){ closeDrawer(); return; }
+  openDrawer();
+  const k=kindOf(n); const nice={dataset:'Data',software:'Software',computation:'Computation',mlmodel:'Model',schema:'Schema',root:'The crate itself'};
+  $('#edType').textContent=nice[k]||typesOf(n).join(', '); $('#edName').textContent=n.name||'(no name yet)'; $('#edId').textContent=n['@id'];
+  const box=$('#edFields'); box.innerHTML='';
+  const order=['name','description','author','keywords','license','version','dateCreated','datePublished','format','contentUrl','url','command','runBy','usedDataset','usedSoftware','usedMLModel','generatedBy','generated','dateModified'];
+  const keys=Object.keys(n).filter(k=>!HIDDEN.has(k)).sort((a,b)=>{const ia=order.indexOf(a),ib=order.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b);});
+  keys.forEach(k=>box.appendChild(fieldRow(n,k)));
+  const lt=$('#linkTarget'); lt.innerHTML='';
+  S.crate['@graph'].filter(m=>m!==n&&!['descriptor','root'].includes(kindOf(m))).forEach(m=>{const o=document.createElement('option');o.value=m['@id'];o.textContent=`${nice[kindOf(m)]||''}: ${label(m)}`;lt.appendChild(o);});
+  const pr=$('#edProblems'); pr.innerHTML=''; (S.problems[id]||[]).forEach(p=>{const d=document.createElement('div');d.className='problem';d.textContent='⚠ '+p;pr.appendChild(d);});
+  renderAiReady(n, k in {dataset:1,software:1,computation:1,mlmodel:1,root:1} ? k : null);
+  setView(S.view);
+}
+function fieldRow(n,k){
+  const v=n[k]; const row=document.createElement('div'); row.className='kv';
+  const kind=kindOf(n); const fm=fieldMeta(kind,k);
+  const kk=document.createElement('div'); kk.className='k'; kk.textContent=NICE_KEY[k]||(fm&&fm.label)||k; kk.dataset.key=k; kk.title=k; if(fm&&fm.help) kk.title=k+'\n\n'+fm.help; row.appendChild(kk);
+  const isRef = (EDGE_PROPS.includes(k) && refIds(v).length>0) || (Array.isArray(v)&&v.length&&v.every(x=>x&&typeof x==='object'&&x['@id'])) || (v&&typeof v==='object'&&!Array.isArray(v)&&v['@id']&&Object.keys(v).length===1);
+  let inp;
+  if (isRef){
+    inp=document.createElement('div'); inp.className='refs';
+    refIds(v).forEach(id=>{ const m=byId(id); const a=document.createElement('div'); a.innerHTML=`→ <a href="#">${m?(m.name||id):id}</a><button title="remove this link">×</button>`;
+      a.querySelector('a').onclick=e=>{e.preventDefault(); if(m) select(id);};
+      a.querySelector('button').onclick=()=>{ const rest=refIds(v).filter(x=>x!==id); if(rest.length) n[k]=rest.map(x=>({'@id':x})); else delete n[k]; select(n['@id']); touched(); };
+      inp.appendChild(a); });
+    if(!refIds(v).length){ inp.textContent=JSON.stringify(v); }
+  } else if (typeof v==='boolean'){
+    inp=document.createElement('select'); inp.innerHTML='<option value="true">Yes</option><option value="false">No</option>'; inp.value=String(v);
+    inp.onchange=()=>{ n[k]=inp.value==='true'; touched(); };
+  } else if (typeof v==='number'){
+    inp=document.createElement('input'); inp.type='number'; inp.value=v;
+    inp.onchange=()=>{ n[k]=Number(inp.value); touched(); };
+  } else {
+    inp=document.createElement('textarea');
+    const strList = Array.isArray(v) && v.every(x=>typeof x==='string');
+    const perLine = strList && v.some(x=>x.length>40 || x.includes(','));
+    inp.value = (typeof v==='string')?v : strList ? v.join(perLine?'\n':', ') : JSON.stringify(v,null,1);
+    if(strList) inp.title = perLine ? 'one entry per line' : 'one or more values, separated by commas';
+    const lines=Math.min(10, Math.max(1, Math.ceil(inp.value.length/38) + (inp.value.match(/\n/g)||[]).length));
+    inp.style.minHeight=(lines*24+20)+'px';
+    inp.onchange=()=>{ let nv=inp.value;
+      if(strList) nv=inp.value.split(perLine?'\n':',').map(x=>x.trim()).filter(Boolean);
+      else if(typeof v!=='string'){ try{nv=JSON.parse(inp.value);}catch(e){ inp.style.borderColor='var(--danger)'; return; } }
+      inp.style.borderColor=''; n[k]=nv; if(k==='name') $('#edName').textContent=nv; touched(); };
+  }
+  row.appendChild(inp);
+  const del=document.createElement('button'); del.className='x'; del.textContent='×'; del.title='remove this property'; del.onclick=()=>{ if(!confirm('Remove "'+(NICE_KEY[k]||k)+'" from this box?'))return; delete n[k]; select(n['@id']); touched(); }; row.appendChild(del);
+  return row;
+}
+function touched(){ S.cratePath=null; draw(); updateStatus(); const r=rootNode(); if(r) $('#crateTitle').textContent=r.name||'untitled crate'; if(S.view==='improve' && drawer.classList.contains('open')) renderImprove(); }
+$('#btnAddKey').onclick=()=>{ const n=byId(S.selected); const k=$('#newKey').value.trim(); if(!n||!k)return; if(!(k in n)) n[k]=''; $('#newKey').value=''; select(n['@id']); touched(); };
+$('#btnLink').onclick=()=>{ const n=byId(S.selected); const p=$('#linkProp').value, t=$('#linkTarget').value; if(!n||!t)return; const cur=refIds(n[p]); if(!cur.includes(t)) n[p]=cur.concat(t).map(x=>({'@id':x})); select(n['@id']); touched(); };
+$('#btnDelete').onclick=()=>{ const id=S.selected; if(!id||!confirm('Delete this box and every link to it?'))return; S.crate['@graph']=S.crate['@graph'].filter(n=>n['@id']!==id);
+  S.crate['@graph'].forEach(n=>{ for(const k of Object.keys(n)){ const ids=refIds(n[k]); if(ids.includes(id)){ const rest=ids.filter(x=>x!==id); if(rest.length) n[k]=rest.map(x=>({'@id':x})); else delete n[k]; } } });
+  closeDrawer(); touched(); };
+
+// ---------- add entity ----------
+$('#btnAdd').onclick=async()=>{
+  if(!S.crate){ alert('Build or open a crate first (steps on the left).'); return; }
+  const type=prompt('What kind of box?\n\nDataset, Software, Computation, MLModel or Schema','Dataset'); if(!type)return;
+  const name=prompt('Give it a name'); if(!name)return;
+  try{ const r=await post('/api/entity/new',{crate:S.crate,type,name}); S.crate=r.crate; select(r.id); touched(); }catch(e){alert(e.message);}
+};
+
+// ---------- validate / save / export / json ----------
+/* check-for-problems button is commented out in the header; handler kept for when it returns
+$('#btnValidate').onclick=async()=>{ try{ const r=await post('/api/validate',{crate:S.crate}); S.problems=r.problems||{};
+  const n=Object.keys(S.problems).length; alert(n?`${n} ${n===1?'box needs':'boxes need'} attention — they are marked ⚠ on the map. Click one to see what to fix.`:'No problems found. This is a valid RO-Crate.'+(r.advice&&r.advice.length?'\n\nTo score better on AI-readiness you could also add:\n• '+r.advice.slice(0,5).join('\n• '):'')); draw(); if(S.selected)showEditor(S.selected); }catch(e){alert('Could not check: '+e.message);} };
+*/
+$('#btnSave').onclick=async()=>{ const p=prompt('Save the crate into which folder?', S.cratePath||S.suggestDir||''); if(!p)return; try{ const r=await post('/api/save',{crate:S.crate,path:p}); S.cratePath=r.path; await artifactLinks(); updateStatus(); if(S.built) $('#status').textContent+='  —  Artifacts ▾ › Rebuild all artifacts & re-score to grade the changes'; alert('Saved:\n'+r.written.join('\n')); }catch(e){alert(e.message);} };
+$('#exportPlugin').onchange=async()=>{ const pl=$('#exportPlugin').value; $('#exportPlugin').value=''; if(!pl||!S.crate)return;
+  try{ const r=await post('/api/export',{crate:S.crate,plugin:pl}); alert('Exported to:\n'+r.path); }catch(e){alert(e.message);} };
+$('#btnJson').onclick=()=>{ if(!S.crate)return; const w=window.open('','_blank'); w.document.write('<pre style="font:13px monospace;white-space:pre-wrap">'+JSON.stringify(S.crate,null,2).replace(/</g,'&lt;')+'</pre>'); };
+
+// ---------- boot ----------
+(async()=>{ const info=await api('/api/info'); S.homeDir=info.home; S.suggestDir=info.suggest_dir;
+  S.plugins=await api('/api/plugins');
+  try{ S.fields=await api('/api/fields'); }catch(e){ S.fields={}; }
+  try{ S.nf=await api('/api/nextflow/info'); }catch(e){ S.nf={available:false,reason:e.message,fields:[]}; }
+  try{ S.smk=await api('/api/snakemake/info'); }catch(e){ S.smk={available:false,reason:e.message,fields:[]}; }
+  try{ S.art=await api('/api/artifacts/info'); }catch(e){ S.art={installed:false,install_command:'pip install fairscape-artifacts'}; }
+  buildKinds(); })();
+</script>
+</body>
+</html>
