@@ -15,6 +15,8 @@ import threading
 import uuid
 from pathlib import Path
 
+from .plugins_meta import LINKED_FIELD
+
 PLUGIN_VERSION = "0.1.0"
 CONFIG_NAME = "rocrate-studio.config"
 
@@ -33,6 +35,7 @@ FIELDS = [
     {"name": "containerProvenance", "label": "Record container provenance", "type": "bool", "default": False},
     {"name": "resume", "label": "Resume a previous run (-resume)", "type": "bool", "default": True},
     {"name": "extra_args", "label": "Extra nextflow arguments", "type": "string", "placeholder": "-profile docker --input data.csv"},
+    LINKED_FIELD,
 ]
 
 

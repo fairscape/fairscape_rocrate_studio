@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#f6f7f9;--panel:#fff;--ink:#1c2128;--muted:#5f6b7a;--line:#e2e5ea;--accent:#2f6fed;--accent-ink:#fff;--accent-soft:#e8effd;
-  --dataset:#3b82f6;--software:#8b5cf6;--computation:#f59e0b;--mlmodel:#ec4899;--schema:#10b981;--root:#374151;--other:#9ca3af;
+  --dataset:#3b82f6;--software:#8b5cf6;--computation:#f59e0b;--mlmodel:#ec4899;--schema:#10b981;--root:#374151;--other:#9ca3af;--linked:#115e59;
   --danger:#dc2626;--ok:#16a34a;--left:380px;--drawer:440px;
 }
 *{box-sizing:border-box}
@@ -99,6 +99,7 @@ details.adv label{font-size:.9rem}
 .kv .refs button{padding:0 6px;font-size:.8rem;margin-left:4px}
 .kv .x{padding:8px 10px;color:var(--muted)}
 .problem{font-size:.95rem;color:var(--danger);margin:6px 0;padding:8px 10px;background:#fff1f1;border-radius:6px}
+.note{font-size:.95rem;color:#134e4a;margin:6px 0;padding:8px 10px;background:#ecfdf5;border-left:3px solid var(--linked);border-radius:6px}
 details.more{margin:14px 0 0;border-top:1px solid var(--line);padding-top:10px}
 #aiready{margin-top:18px;border-top:2px solid var(--line);padding-top:12px}
 #aiready h4{margin:0 0 4px;font-size:1.1rem}
@@ -202,6 +203,7 @@ details.more summary{cursor:pointer;color:var(--muted);font-weight:600}
       <select id="artifacts" class="status" hidden title="Pages and files that sit next to the saved crate, and the fairscape-artifacts build that makes them (datasheet, previews, evidence graph, AI-readiness review)"><option value="">Artifacts ▾</option></select>
       <button id="btnRoot" class="small primary" hidden>✎ Edit crate details</button>
       <button id="btnAdd" class="small">+ Add entity</button>
+      <button id="btnLinkCrate" class="small" hidden title="Reuse another crate's identifiers for inputs it produced, so the two crates form one provenance chain">⇄ Link inputs…</button>
       <button id="btnFit" class="small">Fit</button>
       <button id="btnJson" class="small">JSON</button>
     </div>
@@ -214,6 +216,7 @@ details.more summary{cursor:pointer;color:var(--muted);font-weight:600}
       <span><i style="background:var(--mlmodel)"></i>Model</span>
       <span><i style="background:var(--schema)"></i>Schema</span>
       <span><i style="background:var(--root)"></i>The crate itself</span>
+      <span><i style="background:var(--linked)"></i>Another crate &amp; what came from it</span>
     </div>
   </section>
 
@@ -229,6 +232,7 @@ details.more summary{cursor:pointer;color:var(--muted);font-weight:600}
       </div>
       <h3 id="edName"></h3>
       <div class="idline" id="edId"></div>
+      <div id="edLinked"></div>
       <div id="edProblems"></div>
       <div id="edFields"></div>
       <div id="aiready">
@@ -270,16 +274,32 @@ const ADV_META = ['license','naan'];
 
 // ---------- helpers ----------
 const typesOf = n => { const t=[].concat(n['@type']||[]).map(t => String(t).split('#').pop().split(':').pop()); const evi=t.filter(x=>!['Entity','Activity'].includes(x)); return evi.length?evi:t; };
+const SUBCRATE_FIELD = 'ro-crate-metadata';
+// a node standing for another crate on disk: a linked crate (where an input of
+// this crate was produced) or, in a release, one of its constituents
+const isPointer = n => !!n[SUBCRATE_FIELD] && !(S.crate && isRoot(n));
+const pointerIds = () => new Set(S.crate ? S.crate['@graph'].filter(isPointer).map(n=>n['@id']) : []);
+// the crate node a stub says it belongs to, or null for an ordinary entity.
+// `ids` is the pointer set when the caller already has one — drawing the map
+// asks this of every node, and the set is the same for all of them.
+function stubOf(n, ids){
+  if (!S.crate || isPointer(n)) return null;
+  const owner=refIds(n.isPartOf).find(id=>(ids||pointerIds()).has(id));
+  return owner ? byId(owner) : null;
+}
+function isConstituent(n){ const r=rootNode(); return !!r && refIds(r.hasPart).includes(n['@id']); }
 const kindOf = n => {
   const t = typesOf(n);
   if (n['@id']==='ro-crate-metadata.json') return 'descriptor';
+  if (isPointer(n)) return 'linked';
   if (t.includes('ROCrate') || (S.crate && isRoot(n))) return 'root';
   for (const k of ['MLModel','Computation','Software','Schema','Dataset']) if (t.includes(k)) return k.toLowerCase();
   return 'other';
 };
 function isRoot(n){ const d = S.crate['@graph'].find(x=>x['@id']==='ro-crate-metadata.json'); return d && d.about && (d.about['@id']||d.about)===n['@id']; }
-const color = k => ({dataset:'var(--dataset)',software:'var(--software)',computation:'var(--computation)',mlmodel:'var(--mlmodel)',schema:'var(--schema)',root:'var(--root)'}[k]||'var(--other)');
-const label = n => { const t=(n.name || n['@id'] || '').toString(); return t.length>24 ? t.slice(0,23)+'…' : t; };
+const color = k => ({dataset:'var(--dataset)',software:'var(--software)',computation:'var(--computation)',mlmodel:'var(--mlmodel)',schema:'var(--schema)',root:'var(--root)',linked:'var(--linked)'}[k]||'var(--other)');
+const clip = (t,max) => t.length>max ? t.slice(0,max-1)+'…' : t;
+const label = n => clip((n.name || n['@id'] || '').toString(), 24);
 const EDGE_PROPS = ['usedDataset','usedSoftware','usedMLModel','generatedBy','generated','hasPart','isPartOf','annotates','usedByComputation','usedBy','sourceOrganization'];
 const refIds = v => [].concat(v||[]).map(x => typeof x==='string' ? x : (x && x['@id'])).filter(Boolean);
 const byId = id => S.crate['@graph'].find(n => n['@id']===id);
@@ -362,6 +382,19 @@ function renderForm(form, fields, main){
     if (f.type==='bool'){ inp=document.createElement('input'); inp.type='checkbox'; inp.checked=!!f.default; lab.prepend(inp); lab.style.display='flex'; lab.style.gap='8px'; lab.style.alignItems='center'; lab.style.fontWeight='400'; }
     else if (f.type==='text'){ inp=document.createElement('textarea'); inp.value=f.default||''; wrap.appendChild(inp); }
     else if (f.type==='select'){ inp=document.createElement('select'); (f.choices||[]).forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;inp.appendChild(o);}); inp.value=f.default||''; wrap.appendChild(inp); }
+    else if (f.type==='dirs'){
+      // a list of folders, each with its own Browse; empty rows are dropped
+      inp=document.createElement('div'); inp.className='dirs'; wrap.appendChild(inp);
+      const row=(val='')=>{ const r=document.createElement('div'); r.className='fileinput';
+        const t=document.createElement('input'); t.type='text'; t.value=val; t.placeholder=f.placeholder||'';
+        const b=document.createElement('button'); b.type='button'; b.textContent='Browse…'; b.onclick=()=>browse(t,'dir');
+        const x=document.createElement('button'); x.type='button'; x.textContent='×'; x.title='remove';
+        x.onclick=()=>{ r.remove(); if(!inp.querySelector('.fileinput')) inp.insertBefore(row(), more); };
+        r.append(t,b,x); return r; };
+      const more=document.createElement('button'); more.type='button'; more.className='link';
+      more.textContent='+ another crate'; more.onclick=()=>inp.insertBefore(row(), more);
+      inp.append(row(), more);
+    }
     else if (['path','dir','file'].includes(f.type)){
       const fi=document.createElement('div'); fi.className='fileinput';
       inp=document.createElement('input'); inp.type='text'; inp.value=f.default||''; inp.placeholder=f.placeholder||'';
@@ -379,7 +412,7 @@ function renderForm(form, fields, main){
         }catch(e){ alert(e.message); } b.disabled=false; b.textContent='Look up'; };
       fi.append(inp,b,dl); wrap.appendChild(fi);
     } else { inp=document.createElement('input'); inp.type='text'; inp.value=f.default??''; inp.placeholder=f.placeholder||''; wrap.appendChild(inp); }
-    inp.name=f.name; inp.dataset.type=f.type;
+    inp.setAttribute('name', f.name); inp.dataset.type=f.type;
     if (f.help){ const h=document.createElement('div'); h.className='hint'; h.textContent=f.help; wrap.appendChild(h); }
     form.appendChild(wrap);
   });
@@ -387,8 +420,13 @@ function renderForm(form, fields, main){
 function formValues(form){
   const out={};
   form.querySelectorAll('[name]').forEach(el=>{
-    if (el.dataset.type==='bool') out[el.name]=el.checked;
-    else if (el.value!=='') out[el.name]=el.value;
+    const name=el.getAttribute('name');
+    if (el.dataset.type==='bool') out[name]=el.checked;
+    else if (el.dataset.type==='dirs'){
+      const vals=[...el.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);
+      if (vals.length) out[name]=vals;
+    }
+    else if (el.value!=='') out[name]=el.value;
   });
   return out;
 }
@@ -504,7 +542,7 @@ $('#btnGo').onclick=()=>go(false);
 // ---------- crate / graph ----------
 function setCrate(crate, path){
   S.crate=crate; S.cratePath=path||null; S.selected=null; S.problems={}; S.improve=null; S.built=false; S.estimate=null;
-  $('#empty').hidden=true; $('#btnRoot').hidden=false; /* $('#btnValidate').disabled=false; */ $('#btnSave').disabled=false; $('#exportPlugin').disabled=false;
+  $('#empty').hidden=true; $('#btnRoot').hidden=false; $('#btnLinkCrate').hidden=false; /* $('#btnValidate').disabled=false; */ $('#btnSave').disabled=false; $('#exportPlugin').disabled=false;
   const root = rootNode();
   const t=$('#crateTitle'); t.hidden=false; t.textContent=(root&&root.name)||'untitled crate';
   vb=null; draw(true); closeDrawer(); updateStatus(); artifactLinks();
@@ -527,6 +565,46 @@ async function artifactLinks(){
 $('#artifacts').onchange=()=>{ const sel=$('#artifacts'), v=sel.value; sel.value=''; if(!v) return;
   if (v.startsWith('open:')) window.open('/api/file?path='+encodeURIComponent(v.slice(5)),'_blank'); else if (v==='build') buildArtifacts(); else if (v==='install') installArtifacts(); };
 // a small confirm box with the one option that matters: whether the review may go online
+// ---------- linking to the crates an input came from ----------
+// The same pass the conversion form's "Linked crates" option runs, over a crate
+// that is already open: an input another crate produced stops being a new
+// entity nothing made and becomes that crate's entity, with a pointer back.
+function linkDialog(){
+  if(!S.crate) return;
+  if(!S.cratePath){ alert('Save the crate first.\n\nLinking writes where each input actually is and where the other crate sits relative to this one, so it needs to know where this crate lives.'); return; }
+  const ov=document.createElement('div'); ov.className='browser';
+  ov.innerHTML=`<div class="box" style="min-height:0">
+    <h3 style="margin:0">Link inputs to another crate</h3>
+    <p class="hint" style="margin:0">Point at crates whose outputs this run used — the folder holding each one's <code>ro-crate-metadata.json</code>. An input found in one of them reuses that crate's identifier and links back to it; anything not found is left alone.</p>
+    <div id="lkRows"></div>
+    <div id="lkLog" class="log" hidden></div>
+    <div class="row"><button id="lkGo" class="primary">Link</button><button id="lkCancel">Cancel</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  const rows=ov.querySelector('#lkRows');
+  const row=(val='')=>{ const r=document.createElement('div'); r.className='fileinput'; r.style.marginBottom='6px';
+    const t=document.createElement('input'); t.type='text'; t.placeholder='/path/to/upstream-crate'; t.value=val;
+    const b=document.createElement('button'); b.type='button'; b.textContent='Browse…'; b.onclick=()=>browse(t,'dir');
+    r.append(t,b); return r; };
+  rows.appendChild(row());
+  const more=document.createElement('button'); more.className='link'; more.textContent='+ another crate';
+  more.onclick=()=>rows.insertBefore(row(), more); rows.appendChild(more);
+  ov.querySelector('#lkCancel').onclick=()=>ov.remove();
+  ov.querySelector('#lkGo').onclick=async()=>{
+    const linked=[...rows.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);
+    if(!linked.length){ alert('Pick at least one crate.'); return; }
+    const log=ov.querySelector('#lkLog'), go=ov.querySelector('#lkGo');
+    go.disabled=true; log.hidden=false; log.className='log'; log.textContent='Looking…';
+    try{
+      const r=await post('/api/link',{crate:S.crate, path:S.cratePath, linked});
+      log.className='log ok'; log.textContent=r.log;
+      if(r.matched){ setCrate(r.crate, r.crate_path); }
+      go.textContent='Done'; setTimeout(()=>ov.remove(), r.matched?1400:2600);
+    }catch(e){ log.className='log err'; log.textContent=e.message; go.disabled=false; }
+  };
+}
+$('#btnLinkCrate').onclick=linkDialog;
+
 function confirmBuild(){
   return new Promise(resolve=>{
     const ov=document.createElement('div'); ov.className='browser dlg';
@@ -581,7 +659,8 @@ function updateStatus(){
   const g=S.crate['@graph']; const counts={};
   g.forEach(n=>{const k=kindOf(n); if(k!=='descriptor'&&k!=='root') counts[k]=(counts[k]||0)+1;});
   const nice={dataset:'data',software:'software',computation:'computations',mlmodel:'models',schema:'schemas',other:'other'};
-  $('#status').textContent = Object.entries(counts).map(([k,v])=>`${v} ${nice[k]||k}`).join(' · ') + (S.cratePath?'  —  saved at '+S.cratePath:'  —  not saved yet');
+  const name=(k,v)=>k==='linked' ? (v===1?'linked crate':'linked crates') : (nice[k]||k);
+  $('#status').textContent = Object.entries(counts).map(([k,v])=>`${v} ${name(k,v)}`).join(' · ') + (S.cratePath?'  —  saved at '+S.cratePath:'  —  not saved yet');
   $('#status').title = S.cratePath ? (S.built ? 'Saved. Artifacts ▾ › Rebuild all artifacts & re-score grades the saved crate again.' : 'Saved. Artifacts ▾ › Build all artifacts… makes the datasheet, evidence graph and AI-readiness review.') : 'Unsaved edits: the artifacts build and the Improve ranking read the crate folder on disk, so save first.';
 }
 function buildLayout(){
@@ -623,14 +702,26 @@ function draw(refit){
     const t=el('text',{x:mx,y:(y1+y2)/2-4,class:'edgelabel','text-anchor':'middle'}); t.textContent=e.prop; view.appendChild(t);
   });
   const nice={dataset:'Data',software:'Software',computation:'Computation',mlmodel:'Model',schema:'Schema',root:'The crate',other:''};
+  const ptr=pointerIds();
   nodes.forEach(n=>{
-    const p=pos[n['@id']]; const k=kindOf(n);
+    const p=pos[n['@id']]; const k=kindOf(n); const from=stubOf(n, ptr);
     const g=el('g',{class:'node'+(S.selected===n['@id']?' selected':''),transform:`translate(${p.x},${p.y})`});
     g.appendChild(el('rect',{width:p.w,height:p.h,fill:color(k)}));
-    const t1=el('text',{x:12,y:22,class:'type'}); t1.textContent=(nice[k]||typesOf(n).join(', ')) + (S.problems[n['@id']]?'   ⚠ needs attention':''); g.appendChild(t1);
+    let type = k==='linked' ? (isConstituent(n)?'Crate in this release':'Linked crate') : (nice[k]||typesOf(n).join(', '));
+    // the box is 200px wide and SVG text does not wrap, so name the crate a
+    // stub came from only as far as it fits; the tooltip has it in full
+    if (from) type = clip(type+' · from '+(from.name||'another crate'), 30);
+    const t1=el('text',{x:12,y:22,class:'type'}); t1.textContent=type + (S.problems[n['@id']]?'   ⚠ needs attention':''); g.appendChild(t1);
     const t2=el('text',{x:12,y:43,'font-weight':'600'}); t2.textContent=label(n); g.appendChild(t2);
     if(k==='root'){ g.appendChild(el('rect',{width:p.w,height:p.h,fill:'none',stroke:'#111827',rx:9,'stroke-width':2,'stroke-dasharray':'5 3'})); }
-    const title=el('title'); title.textContent=(n.name||n['@id'])+'\n'+(n.description||''); g.appendChild(title);
+    // a stub is this crate's word for something another crate produced: dashed,
+    // in that crate's colour, so it reads as a doorway rather than an entity
+    if(from||k==='linked'){ g.appendChild(el('rect',{width:p.w,height:p.h,fill:'none',stroke:'#115e59',rx:9,'stroke-width':2,'stroke-dasharray':'4 3'})); }
+    const title=el('title');
+    title.textContent=(n.name||n['@id'])+'\n'+(n.description||'')
+      + (from?`\n\nProduced by ${from.name||'another crate'} — this crate points at it, the chain behind it lives there.`:'')
+      + (k==='linked'?`\n\n${n[SUBCRATE_FIELD]}`:'');
+    g.appendChild(title);
     g.onclick=(ev)=>{ev.stopPropagation(); select(n['@id']);};
     view.appendChild(g);
   });
@@ -786,8 +877,9 @@ function select(id){ S.selected=id; draw(); showEditor(id); }
 function showEditor(id){
   const n=id&&byId(id); if(!n){ closeDrawer(); return; }
   openDrawer();
-  const k=kindOf(n); const nice={dataset:'Data',software:'Software',computation:'Computation',mlmodel:'Model',schema:'Schema',root:'The crate itself'};
+  const k=kindOf(n); const nice={dataset:'Data',software:'Software',computation:'Computation',mlmodel:'Model',schema:'Schema',root:'The crate itself',linked:'Another crate'};
   $('#edType').textContent=nice[k]||typesOf(n).join(', '); $('#edName').textContent=n.name||'(no name yet)'; $('#edId').textContent=n['@id'];
+  renderLinked(n, k);
   const box=$('#edFields'); box.innerHTML='';
   const order=['name','description','author','keywords','license','version','dateCreated','datePublished','format','contentUrl','url','command','runBy','usedDataset','usedSoftware','usedMLModel','generatedBy','generated','dateModified'];
   const keys=Object.keys(n).filter(k=>!HIDDEN.has(k)).sort((a,b)=>{const ia=order.indexOf(a),ib=order.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b);});
@@ -797,6 +889,27 @@ function showEditor(id){
   const pr=$('#edProblems'); pr.innerHTML=''; (S.problems[id]||[]).forEach(p=>{const d=document.createElement('div');d.className='problem';d.textContent='⚠ '+p;pr.appendChild(d);});
   renderAiReady(n, k in {dataset:1,software:1,computation:1,mlmodel:1,root:1} ? k : null);
   setView(S.view);
+}
+// A stub, or the crate it points at: say so, and offer to open that crate.
+function renderLinked(n, k){
+  const box=$('#edLinked'); box.innerHTML='';
+  const from = k==='linked' ? n : stubOf(n);
+  if(!from) return;
+  const d=document.createElement('div'); d.className='note';
+  const where = from[SUBCRATE_FIELD] ? ' ('+from[SUBCRATE_FIELD]+')' : '';
+  d.textContent = k==='linked'
+    ? (isConstituent(from)
+        ? 'A crate inside this one. Its own metadata file has the detail'+where+'.'
+        : 'Another crate on disk, pointed at because this crate used something it produced. It is not part of this crate'+where+'.')
+    : 'Produced by ' + (from.name||'another crate') + '. This box is that crate\u2019s entity, under its identifier; what made it lives there, and the datasheet and evidence graph follow the pointer.';
+  box.appendChild(d);
+  const open=document.createElement('button'); open.className='link'; open.textContent='Open '+(from.name||'that crate')+' in the studio';
+  open.onclick=async()=>{
+    const path=from.localPath || (S.cratePath ? S.cratePath.replace(/\/$/,'')+'/'+from[SUBCRATE_FIELD] : from[SUBCRATE_FIELD]);
+    try{ const r=await post('/api/open',{path}); setCrate(r.crate,r.crate_path); $('#status').textContent='Opened '+r.crate_path; }
+    catch(e){ alert('Could not open it: '+e.message); }
+  };
+  box.appendChild(open);
 }
 function fieldRow(n,k){
   const v=n[k]; const row=document.createElement('div'); row.className='kv';

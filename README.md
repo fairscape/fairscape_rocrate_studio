@@ -47,6 +47,45 @@ button aborts it, and the crate loads on the right the moment it is written.
 | **Run live** — A Nextflow pipeline | Point at a pipeline folder, fill in author/description/keywords, click **Run pipeline and build crate**. The run log streams in; the crate loads when it finishes. | `nextflow run . -c rocrate-studio.config -plugins nf-fairscape@0.1.0` |
 | **Run live** — A Snakemake workflow | Point at a folder with a `Snakefile`, click **Run workflow and build crate**. It runs the workflow, then runs the FAIRSCAPE reporter over the finished DAG; both logs stream in and the crate loads at the end. Tick *Already ran it* (under Advanced) to skip straight to the report. | `snakemake --cores N --use-conda`, then `snakemake --reporter fairscape …` |
 
+## Linked crates — inputs another crate already describes
+
+When a run reads files another run produced, the two crates do not know about
+each other: each importer mints its own identifier for the shared file, so the
+consumer ends up with an input nothing made. **Linked crates** fixes that, and
+it is one field.
+
+Every importer that describes files on disk has **Linked crates** under
+*Advanced options*: point at the folder holding the other crate's
+`ro-crate-metadata.json`, one row per crate, and build. An input found in one
+of them keeps that crate's identifier instead of a fresh one, carries
+`isPartOf` → that crate, and the crate itself is added once as a pointer
+(`ro-crate-metadata`, the same field a release crate uses for a constituent,
+on a node the root does *not* list in `hasPart`). The run log says what was
+matched and how. The same option is on the two *Run a workflow live* paths,
+where it runs over the crate the run writes.
+
+For a crate that already exists, **⇄ Link inputs…** above the map does the same
+thing to the crate on screen and writes it back. Save the crate first: the pass
+needs to know where it lives to write the paths.
+
+Matching is by evidence, in this order — the same file (by absolute path), then
+a matching `md5`, then a folder the other crate describes as one Dataset, which
+is what a Nextflow `publishDir` looks like from outside. An input nothing
+upstream describes is left exactly as it was, so nothing is invented. Nothing
+is copied, and the other crate is never modified.
+
+On the map a stub is dashed in teal and its label says *from &lt;that crate&gt;*;
+the crate it points at is a teal box. Click either and the drawer offers to open
+that crate in the studio. Saving recomputes each pointer from wherever the crate
+lands, so a pair of crates stays portable.
+
+The payoff is in **Artifacts ▾**: `fairscape-artifacts` follows the pointer, so
+the datasheet lists the linked crates and one evidence graph runs from this
+crate's outputs, through the stub, into the other crate's chain and back to its
+raw inputs. The convention, and two worked pairs (Nextflow → MLflow,
+Snakemake → Snakemake), are in
+`fairscape_conversion/examples/linked-crates/README.md`.
+
 **Artifacts ▾** above the map lists everything found next to the saved crate —
 datasheet, crate preview, provenance graph, evidence graph, the D4D/LinkML
 YAML, Croissant, the workflow plugin's own score file — and opens any of them in
@@ -92,9 +131,9 @@ writes `ro-crate-metadata.json`.
 
 ```
 rocrate_studio/
-  app.py              FastAPI routes (/api/convert, /api/validate, /api/save, /api/artifacts[/info|build|log|stop|install], /api/improve, /api/{nextflow,snakemake}/{run,log,stop}, …)
+  app.py              FastAPI routes (/api/convert, /api/link, /api/validate, /api/save, /api/artifacts[/info|build|log|stop|install], /api/improve, /api/{nextflow,snakemake}/{run,log,stop}, …)
   plugins_meta.py     per-plugin form fields + how to call convert()   <- add a plugin here
-  crate_ops.py        new crate / add entity / validate / read / write
+  crate_ops.py        new crate / add entity / validate / read / write / link to other crates
   nextflow_runner.py  config overlay + subprocess + log streaming + stop
   snakemake_runner.py finds snakemake + the reporter, runs both passes, streams both, stop
   artifacts_runner.py fairscape-artifacts all as a streamed job, then the improvements form + estimate

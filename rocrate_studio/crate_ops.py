@@ -20,6 +20,12 @@ from fairscape_models.rocrate import ROCrateMetadataElem, ROCrateV1_2
 EVI = "https://w3id.org/EVI#"
 DESCRIPTOR_ID = "ro-crate-metadata.json"
 
+#: A node carrying this field stands for another crate on disk. In a release
+#: crate the root lists such nodes in ``hasPart`` (they are its constituents);
+#: a node the root does *not* contain is a **linked crate** — where an input of
+#: this crate was produced. See ``fairscape_conversion.core.linking``.
+SUBCRATE_PATH_FIELD = "ro-crate-metadata"
+
 TYPE_IRI = {
     "Dataset": ["prov:Entity", EVI + "Dataset"],
     "Software": ["prov:Entity", EVI + "Software"],
@@ -45,9 +51,37 @@ def read_crate(path: str | os.PathLike) -> tuple[dict, Path]:
 def write_crate(crate: dict, folder: str | os.PathLike) -> list[str]:
     d = Path(folder).expanduser()
     d.mkdir(parents=True, exist_ok=True)
+    retarget_pointers(crate, d)
     target = d / DESCRIPTOR_ID
     target.write_text(json.dumps(crate, indent=2, default=str))
     return [str(target)]
+
+
+def retarget_pointers(crate: dict, folder: str | os.PathLike) -> list[str]:
+    """Rewrite each linked crate's path so it is right from ``folder``.
+
+    A crate points at another by a path relative to its own folder, and the
+    studio only learns where a crate lives when it is saved — often somewhere
+    other than where it was built. Each pointer is recomputed from the
+    absolute location kept beside it, which is what makes a saved pair of
+    crates portable. A pointer whose crate cannot be found is left untouched.
+    """
+    from fairscape_conversion.core.linking import pointer_path
+
+    folder = Path(folder).expanduser()
+    changed = []
+    for node in linked_crates(crate).values():
+        target = node.get("localPath") or ""
+        if not target:
+            target = os.path.normpath(os.path.join(folder, str(node[SUBCRATE_PATH_FIELD])))
+        if not Path(target).is_file():
+            continue
+        new = pointer_path(str(target), str(folder))
+        if new != node.get(SUBCRATE_PATH_FIELD):
+            node[SUBCRATE_PATH_FIELD] = new
+            changed.append(node["@id"])
+        node["localPath"] = str(Path(target).resolve())
+    return changed
 
 
 # ------------------------------------------------------------------ build
@@ -118,6 +152,43 @@ def add_entity(crate: dict, type_: str, name: str, naan: str = "59853") -> str:
     return guid
 
 
+# ------------------------------------------------------------------ linked crates
+
+def linked_crates(crate: dict) -> dict[str, dict]:
+    """``{@id: node}`` for every crate this one *points at* — a crate stub the
+    root does not list in ``hasPart``. A release crate's constituents are in
+    ``hasPart`` and so are not linked crates."""
+    root = root_of(crate) or {}
+    parts = set(_ids(root.get("hasPart") or []))
+    return {n["@id"]: n for n in crate["@graph"]
+            if n.get(SUBCRATE_PATH_FIELD) and n.get("@id") not in parts
+            and n.get("@id") != root.get("@id")}
+
+
+def link(crate: dict, folders, crate_dir: str | os.PathLike | None = None,
+         search_dirs=()) -> dict:
+    """Run the linking pass over ``crate`` in place; return a plain-data report.
+
+    ``folders`` are upstream crate folders (or their metadata files). Every
+    entity this crate only consumed is looked up in them by path, then md5,
+    then containing directory; a hit becomes a stub under the upstream's own
+    identifier and the upstream crate is added once as a pointer.
+
+    ``search_dirs`` are extra folders a relative path in this crate may be
+    counted from — a workflow reporter writes them relative to where the run
+    happened, which is neither the crate folder nor anything the pass could
+    guess.
+    """
+    from fairscape_conversion.core.linking import link_crate
+
+    report = link_crate(crate, [str(f) for f in folders],
+                        crate_dir=str(crate_dir) if crate_dir else None,
+                        search_dirs=[str(d) for d in search_dirs])
+    return {"summary": report.summary(),
+            "matches": [m.as_dict() for m in report.matches],
+            "unmatched": list(report.unmatched)}
+
+
 # ------------------------------------------------------------------ validate
 
 def _ids(value) -> list[str]:
@@ -173,8 +244,18 @@ def validate(crate: dict) -> dict:
     advice = []
     if root is not None:
         parts = set(_ids(root.get("hasPart") or []))
+        # A linked crate is a pointer, not a part of this crate, and neither
+        # are the stubs that say they belong to it — the upstream crate's
+        # hasPart already contains them. Nothing here is missing from the root.
+        pointers = set(linked_crates(crate))
+        exempt = set(pointers)
+        for node in crate["@graph"]:
+            if pointers & set(_ids(node.get("isPartOf") or [])):
+                exempt.add(node.get("@id"))
         for node in crate["@graph"]:
             gid = node.get("@id")
+            if gid in exempt:
+                continue
             if gid not in (DESCRIPTOR_ID, root["@id"]) and gid not in parts and str(gid).startswith("ark:"):
                 add(gid, "not listed in the crate root's hasPart")
         try:

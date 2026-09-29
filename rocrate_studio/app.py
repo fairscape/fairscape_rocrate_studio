@@ -244,7 +244,12 @@ def convert(req: ConvertReq):
     if not meta or not meta["import"]:
         raise HTTPException(400, f"{req.plugin} cannot import")
     mod = importlib.import_module(f"fairscape_conversion.plugins.{req.plugin}")
-    opts = {k: v for k, v in req.options.items() if v not in ("", None)}
+    opts = {k: v for k, v in req.options.items() if v not in ("", None, [])}
+    # the linking pass runs here rather than inside the plugin, so it works the
+    # same for a plugin whose convert() takes no options (see plugins_meta)
+    linked = opts.pop("linked_crates", None) or []
+    if isinstance(linked, str):
+        linked = [linked]
     log = []
     crate_path = None
     try:
@@ -316,8 +321,25 @@ def convert(req: ConvertReq):
     except Exception as e:  # noqa: BLE001
         _fail(e, f"{req.plugin} import failed — ")
     crate = json.loads(json.dumps(crate, default=str))
+    if linked:
+        try:
+            report = _link(crate, linked, crate_path or opts.get("crate_dir"), log,
+                           source=source if isinstance(source, (str, Path)) else req.options.get("source"))
+        except Exception as e:  # noqa: BLE001
+            _fail(e, "linking failed — ")
+        if crate_path and report["matches"]:
+            crate_ops.write_crate(crate, crate_path)
     log.append(f"{len(crate['@graph'])} entities")
     return {"crate": crate, "crate_path": crate_path, "log": "\n".join(log)}
+
+
+def _link(crate: dict, folders: list, crate_dir, log: list, source=None) -> dict:
+    """Run the linking pass and say what it did, one line per match."""
+    report = crate_ops.link(crate, folders, crate_dir, _search_dirs(source, crate_dir))
+    log.append(report["summary"])
+    for m in report["matches"]:
+        log.append(f"  {m['old_id']} -> {m['new_id']}  [{m['method']}]")
+    return report
 
 
 # ------------------------------------------------------------------ crate ops
@@ -381,6 +403,60 @@ def validate(req: CrateReq):
         _fail(e)
 
 
+def _search_dirs(source, crate_dir) -> list[str]:
+    """Folders a relative path in a fresh crate might be counted from.
+
+    An importer records a file's path the way its source did. A Snakemake
+    report says ``../../other-run/results/x.tsv`` — relative to where the run
+    happened, which is the folder above the records file, not the crate. So
+    the source's folder and its parent are offered as bases alongside the
+    crate folder. A base that means nothing resolves to a path no linked
+    crate contains, so it costs nothing.
+    """
+    out = []
+    for path in (source, crate_dir):
+        if not isinstance(path, (str, Path)) or "://" in str(path):
+            continue
+        p = Path(str(path)).expanduser()
+        base = p if p.is_dir() else p.parent
+        for d in (base, base.parent):
+            if d.is_dir() and str(d) not in out:
+                out.append(str(d))
+    return out
+
+
+class LinkReq(CrateReq):
+    path: str = ""
+    linked: list[str] = []
+
+
+@app.post("/api/link")
+def link(req: LinkReq):
+    """Link a crate that already exists to the crates its inputs came from.
+
+    The same pass ``/api/convert`` runs, over a loaded crate instead of a
+    fresh conversion. ``path`` is the crate's folder: it anchors the relative
+    locators and the pointer written into the crate, and when the crate is
+    saved there the linked copy is written back, so the crate on disk and the
+    one on screen stay the same thing.
+    """
+    if not req.linked:
+        raise HTTPException(400, "pick at least one crate to link to")
+    crate = copy.deepcopy(req.crate)
+    log: list[str] = []
+    try:
+        report = _link(crate, req.linked, req.path or None, log, source=req.path or None)
+        if req.path and report["matches"]:
+            crate_ops.write_crate(crate, req.path)
+            log.append(f"wrote {Path(req.path).expanduser() / 'ro-crate-metadata.json'}")
+    except HTTPException:
+        raise
+    except Exception as e:  # noqa: BLE001
+        _fail(e, "linking failed — ")
+    return {"crate": crate, "crate_path": req.path or None,
+            "matched": len(report["matches"]), "log": "\n".join(log)}
+
+
 @app.post("/api/save")
 def save(req: SaveReq):
     try:
@@ -435,6 +511,9 @@ def nf_run(form: dict):
         job = nextflow_runner.start(form)
     except Exception as e:  # noqa: BLE001
         _fail(e)
+    # the runner only knows how to run the workflow; linking happens over the
+    # crate it writes, in _crate_payload
+    job.linked_crates = [c for c in (form.get("linked_crates") or []) if c]
     return {"job": job.id}
 
 
@@ -457,6 +536,9 @@ def smk_run(form: dict):
         job = snakemake_runner.start(form)
     except Exception as e:  # noqa: BLE001
         _fail(e)
+    # the runner only knows how to run the workflow; linking happens over the
+    # crate it writes, in _crate_payload
+    job.linked_crates = [c for c in (form.get("linked_crates") or []) if c]
     return {"job": job.id}
 
 
@@ -508,11 +590,25 @@ async def nf_log(job_id: str):
 
 
 def _crate_payload(job) -> dict:
-    """What a workflow run adds to its final event: the crate it produced."""
+    """What a workflow run adds to its final event: the crate it produced,
+    linked to the crates its inputs came from when the form named any."""
     payload = {}
     if job.ok and Path(job.crate_file).exists():
         try:
             crate, folder = crate_ops.read_crate(job.crate_file)
+            linked = getattr(job, "linked_crates", None) or []
+            if linked:
+                # the workflow has already run; a bad folder here is worth
+                # saying loudly, never worth throwing the run's crate away
+                log: list[str] = []
+                try:
+                    report = _link(crate, linked, str(folder), log)
+                    if report["matches"]:
+                        crate_ops.write_crate(crate, folder)
+                except Exception as e:  # noqa: BLE001
+                    log.append(f"linking failed, crate left unlinked — "
+                               f"{type(e).__name__}: {e}")
+                job.lines.extend(log)
             payload.update(crate=crate, crate_path=str(folder))
         except Exception as e:  # noqa: BLE001
             payload.update(ok=False, error=f"the run wrote {job.crate_file} but it "
@@ -534,6 +630,11 @@ async def _job_stream(job, final=_crate_payload):
         if job.done:
             payload = {"done": True, "ok": job.ok}
             payload.update(final(job))
+            # `final` may say something worth reading — the linking pass does —
+            # so flush what it added before the verdict rather than losing it
+            while sent < len(job.lines):
+                yield f"data: {json.dumps({'line': job.lines[sent]})}\n\n"
+                sent += 1
             yield f"data: {json.dumps(payload)}\n\n"
             return
         await asyncio.sleep(0.5)

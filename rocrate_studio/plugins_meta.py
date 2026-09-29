@@ -35,6 +35,25 @@ def _crate_meta(name_help="Name of the crate"):
     ]
 
 
+#: The advanced field every importer that describes files on disk carries.
+#: The studio runs the linking pass itself (``crate_ops.link``) rather than
+#: passing ``linked_crates`` into the plugin, so a plugin whose ``convert()``
+#: takes no options — d4d, wrroc — takes part on the same terms.
+LINKED_FIELD = {
+    "name": "linked_crates",
+    "label": "Linked crates (inputs that another crate already describes)",
+    "type": "dirs",
+    "placeholder": "/path/to/upstream-crate",
+    "help": "Point at crates whose outputs this run consumed — the folder holding their "
+            "ro-crate-metadata.json. Inputs found in one of them reuse that crate's "
+            "identifiers and link back to it, instead of becoming new entities nothing "
+            "produced. Matched by file path, then checksum, then containing folder.",
+}
+
+#: Plugins whose crates describe no files on disk, so there is nothing to match.
+NO_LINKING = {"d4d", "croissant"}
+
+
 PLUGINS = {
     "mlflow": {
         "title": "MLflow experiment",
@@ -213,6 +232,11 @@ PLUGINS = {
         "export_ext": ".json",
     },
 }
+
+
+for _name, _meta in PLUGINS.items():
+    if _meta["import"] and _name not in NO_LINKING:
+        _meta["options"].append(dict(LINKED_FIELD))
 
 
 def public_list():

@@ -24,6 +24,8 @@ import threading
 import uuid
 from pathlib import Path
 
+from .plugins_meta import LINKED_FIELD
+
 REPORTER_PACKAGE = "snakemake-report-plugin-fairscape"
 REPORTER_MODULE = "snakemake_report_plugin_fairscape"
 CRATE_NAME = "ro-crate-metadata.json"
@@ -50,6 +52,7 @@ FIELDS = [
     {"name": "naan", "label": "ARK NAAN", "type": "string", "default": "59853"},
     {"name": "extra_args", "label": "Extra snakemake arguments", "type": "string",
      "placeholder": "--configfile config/other.yaml --rerun-incomplete"},
+    LINKED_FIELD,
 ]
 
 
