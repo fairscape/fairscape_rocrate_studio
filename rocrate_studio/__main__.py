@@ -19,17 +19,24 @@ def main():
     # so here rather than on the first click
     deps.require()
 
-    import uvicorn  # after the check: it is one of the things that may be missing
-
     note = deps.startup_note()
     if note:
         print(note)
 
+    # the first start after an install compiles fastapi, pydantic and the
+    # fairscape packages to bytecode, which can take a while with no output
+    print("Starting RO-Crate Studio... (the first start after installing can take "
+          "up to a minute; later starts take a second or two)", flush=True)
+    import uvicorn  # after the check: it is one of the things that may be missing
+    from .app import app
+
     url = f"http://127.0.0.1:{a.port}"
     if not a.no_browser:
         threading.Timer(1.0, lambda: webbrowser.open(url)).start()
-    print(f"RO-Crate Studio at {url}  (Ctrl-C to stop)")
-    uvicorn.run("rocrate_studio.app:app", host="127.0.0.1", port=a.port, log_level="warning")
+    print(f"RO-Crate Studio is running at {url}", flush=True)
+    print("Open that address in your browser if it does not open by itself. "
+          "Leave this window open while you use it; press Ctrl-C here to stop.", flush=True)
+    uvicorn.run(app, host="127.0.0.1", port=a.port, log_level="warning")
 
 
 if __name__ == "__main__":

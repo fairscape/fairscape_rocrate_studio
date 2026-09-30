@@ -32,7 +32,7 @@ power the Artifacts and Improve panels.
 
 ```bash
 cd ~                      # anywhere except ~/fairscape — see below
-rocrate-studio --check    # ends with "ready: rocrate-studio will start"
+rocrate-studio --check    # ends with "all required packages are installed"
 rocrate-studio            # opens http://127.0.0.1:8765
 ```
 

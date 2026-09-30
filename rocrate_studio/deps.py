@@ -210,7 +210,8 @@ def print_report() -> int:
     print(f"  snakemake  {sm}")
     bad = bool(missing()) or sys.version_info < MIN_PYTHON
     print("\n" + ("some required packages are missing — see above"
-                  if bad else "ready: rocrate-studio will start"))
+                  if bad else "all required packages are installed. This was only a check;\n"
+                              "to start the studio, run:  rocrate-studio"))
     return 1 if bad else 0
 
 
