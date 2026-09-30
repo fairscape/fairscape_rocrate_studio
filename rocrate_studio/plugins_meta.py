@@ -157,7 +157,8 @@ PLUGINS = {
     },
     "d4d": {
         "title": "Datasheet for Datasets",
-        "blurb": "A D4D datasheet (YAML or JSON) becomes a crate with one dataset.",
+        "blurb": "A D4D datasheet (YAML or JSON) becomes a crate with one dataset. "
+                 "Export writes the crate's D4D/LinkML datasheet (what fairscape-cli called ro-crate-linkml.yaml).",
         "import": True, "export": True,
         "source_kind": "document",
         "sample": {"document": PLUGIN_ROOT / "d4d" / "input.yaml"},
