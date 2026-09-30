@@ -301,7 +301,12 @@ def convert(req: ConvertReq):
                                          + ", ".join(e["name"] for e in exps))
             if isinstance(source, str) and not opts.get("crate_dir"):
                 opts["crate_dir"] = str(OUT_DIR / f"{req.plugin}-crate")
+            # schema inference says on stderr when it had to skip a format and
+            # what to install; repeat that in the log the user actually reads
+            from fairscape_conversion.core import schemas as schema_notes
+            schema_notes.reset_notes()
             crate = mod.convert("import", source, **opts)
+            log.extend(schema_notes.NOTES)
             if isinstance(source, str):
                 # a sample is read-only: its crate_dir anchors the relative
                 # contentUrls (so it has to be the example's own folder), but
