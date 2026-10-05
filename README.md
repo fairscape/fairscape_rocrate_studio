@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="branding/studio-logo-a-dark.svg">
+    <img src="branding/studio-logo-a.svg" alt="FAIRSCAPE Studio" width="360">
+  </picture>
+</p>
+
 # RO-Crate Studio
 
 A point-and-click, runs-on-your-laptop GUI for making RO-Crates with the
@@ -167,3 +174,11 @@ Outputs default to `~/rocrate-studio-out/` (override with `ROCRATE_STUDIO_OUT`).
   output folder instead.
 * Everything is local: the server binds 127.0.0.1 and the file browser is the
   local filesystem.
+
+## Logo
+
+`branding/` holds the logo: `studio-logo-a*.svg` is the main one, `studio-logo-b*.svg` the
+alternate, each with a `-dark` version for dark backgrounds. `branding/png/` has white-background
+PNGs for sharing (1600 px wide) and posters (`-poster`, 6000 px wide), plus the square icon at
+32/180/512 px. Edit and rerun `branding/make_logos.py` to regenerate the SVGs and PNGs and the
+copies the app uses in `rocrate_studio/static/` (needs fontTools, Pillow and Chrome).

@@ -45,6 +45,14 @@ def index():
     return FileResponse(STATIC / "index.html")
 
 
+@app.get("/static/{name}")
+def static_file(name: str):
+    p = (STATIC / name).resolve()
+    if p.parent != STATIC.resolve() or not p.is_file():
+        raise HTTPException(404, "no such static file")
+    return FileResponse(p)
+
+
 @app.get("/api/info")
 def info():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
