@@ -6,169 +6,283 @@
 <title>RO-Crate Studio</title>
 <style>
 :root{
-  --bg:#f6f7f9;--panel:#fff;--ink:#1c2128;--muted:#5f6b7a;--line:#e2e5ea;--accent:#2f6fed;--accent-ink:#fff;--accent-soft:#e8effd;
-  --dataset:#3b82f6;--software:#8b5cf6;--computation:#f59e0b;--mlmodel:#ec4899;--schema:#10b981;--root:#374151;--other:#9ca3af;--linked:#115e59;
-  --danger:#dc2626;--ok:#16a34a;--left:380px;--drawer:440px;
+  color-scheme:light;
+  --bg:#f3f5f8;--panel:#fff;--ink:#121826;--muted:#3e4c5e;--faint:#5c6b7e;--line:#e3e7ee;--line-strong:#cfd6e0;
+  --accent:#1e4fd7;--accent-ink:#fff;--accent-soft:#e7eefe;--accent-ink-soft:#1e3a8a;
+  --dataset:#1d4ed8;--software:#6d28d9;--computation:#9a3412;--mlmodel:#9d174d;--schema:#065f46;--root:#1f2937;--other:#475569;--linked:#115e59;
+  --danger:#b91c1c;--ok:#047857;--warn:#b45309;
+  --left:392px;--drawer:460px;--header-h:64px;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.08);
+  --elev:0 18px 50px rgba(16,24,40,.18);
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --entity:var(--accent);
 }
 *{box-sizing:border-box}
 html{font-size:16px}
-body{margin:0;font:1rem/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);height:100vh;display:flex;flex-direction:column;overflow:hidden}
-header{display:flex;align-items:center;gap:14px;padding:12px 18px;background:var(--panel);border-bottom:1px solid var(--line)}
-header h1{font-size:1.25rem;margin:0;font-weight:700;white-space:nowrap}
-header>button,header>select,header>.badge{flex:none;white-space:nowrap}
-header .badge{max-width:260px;overflow:hidden;text-overflow:ellipsis}
-header select{width:auto!important;max-width:180px;padding:9px 10px}
-header .sub{color:var(--muted);font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+body{margin:0;font:15px/1.45 var(--sans);color:var(--ink);background:var(--bg);height:100vh;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font-family:inherit}
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.skip{position:absolute;left:12px;top:-48px;background:#fff;color:var(--ink);padding:8px 12px;border-radius:8px;z-index:30;box-shadow:var(--shadow)}
+.skip:focus{top:10px}
+header{display:flex;align-items:center;gap:12px;min-height:var(--header-h);padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:8}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:34px;height:34px;border-radius:9px;background:var(--ink);color:#fff;display:grid;place-items:center;flex:none}
+.brand-text{min-width:0}
+.brand-text h1{font-size:15px;line-height:1.2;margin:0;font-weight:700;letter-spacing:-.01em}
+.brand-text p{margin:1px 0 0;color:var(--faint);font-size:12px;white-space:nowrap}
 header .spacer{flex:1}
-main{flex:1;display:grid;grid-template-columns:var(--left) 1fr auto;min-height:0}
+.crate-chip{max-width:min(340px,32vw);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink-soft);border:1px solid #d5e1fb;font-weight:650;font-size:13px;padding:6px 12px;min-height:34px}
+.crate-chip:hover{background:#dce7fd}
+.header-actions{display:flex;align-items:center;gap:8px;flex:none}
+label.export-label{display:flex;align-items:center;gap:8px;margin:0;font-size:12px;font-weight:650;color:var(--faint);letter-spacing:.02em;text-transform:uppercase}
+label.export-label select{width:auto;min-width:150px;max-width:210px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink);min-height:36px;padding:6px 10px}
+main{flex:1;display:grid;grid-template-columns:var(--left) minmax(0,1fr) auto;min-height:0;position:relative}
 aside,section{min-height:0}
-aside{background:var(--panel);border-right:1px solid var(--line);padding:18px 20px 40px;overflow-y:auto;overflow-x:hidden}
-#canvas{position:relative;background:radial-gradient(circle,#d5d9e0 1px,transparent 1px) 0 0/22px 22px;min-width:0}
-svg{width:100%;height:100%;display:block}
+aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.rail-bar{display:none}
+.rail-scroll{flex:1;overflow:auto;padding:14px 14px 20px}
+.rail-foot{flex:none;display:flex;flex-direction:column;gap:8px;padding:12px 14px 14px;border-top:1px solid var(--line);background:linear-gradient(#fff, #fff);box-shadow:0 -8px 16px rgba(255,255,255,.9)}
+#canvas{position:relative;background:radial-gradient(circle,#d5dbe3 1.1px,transparent 1.2px) 0 0/22px 22px;min-width:0;overflow:hidden}
+svg{width:100%;height:100%;display:block;font-family:var(--sans)}
 /* ---- steps ---- */
-.step{margin-bottom:22px}
-.step h2{display:flex;align-items:center;gap:10px;font-size:1.15rem;margin:0 0 4px;font-weight:700}
-.step h2 .n{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:.95rem;flex:none}
-.step .lead{color:var(--muted);margin:0 0 10px;font-size:.95rem}
-.step.dim{opacity:.45;pointer-events:none}
-label{display:block;font-size:.95rem;color:var(--ink);margin:12px 0 5px;font-weight:600}
-label .opt{color:var(--muted);font-weight:400}
-input[type=text],textarea,select{width:100%;padding:11px 12px;border:1px solid #cfd5dd;border-radius:8px;font:inherit;font-size:1rem;background:#fff;color:var(--ink)}
-select{appearance:auto;font-weight:600}
-textarea{min-height:76px;resize:vertical}
-input:focus,textarea:focus,select:focus{outline:3px solid #bfd0fb;border-color:var(--accent)}
-button{font:inherit;font-size:1rem;padding:10px 16px;border-radius:8px;border:1px solid #cfd5dd;background:#fff;color:var(--ink);cursor:pointer}
-button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
-button.big{width:100%;padding:14px;font-size:1.1rem}
-button.small{padding:6px 10px;font-size:.9rem}
-button.link{border:none;background:none;color:var(--accent);padding:4px 0;text-decoration:underline;font-size:.95rem}
-button.danger{color:var(--danger);border-color:#f3c2c2}
-button:disabled{opacity:.5;cursor:default}
+.step{margin:0 0 12px;padding:12px 12px 14px;background:#f8fafc;border:1px solid var(--line);border-radius:12px}
+.step h2{display:flex;align-items:center;gap:8px;font-size:15px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
+.step h2 .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:700;flex:none}
+.step .lead{color:var(--muted);margin:0 0 8px;font-size:13px;line-height:1.4}
+.step.dim{opacity:.48;pointer-events:none}
+label{display:block;font-size:13px;color:var(--ink);margin:12px 0 5px;font-weight:650}
+label .opt{color:var(--faint);font-weight:450}
+input[type=text],textarea,select{width:100%;padding:9px 11px;border:1px solid var(--line-strong);border-radius:8px;font-size:16px;background:#fff;color:var(--ink);min-height:40px}
+@media (min-width:981px){input[type=text],textarea,select{font-size:15px}}
+select{font-weight:600}
+textarea{min-height:84px;resize:vertical;line-height:1.45}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+button{font-size:14px;font-weight:600;padding:8px 12px;min-height:36px;border-radius:8px;border:1px solid var(--line-strong);background:#fff;color:var(--ink);cursor:pointer}
+button:hover:not(:disabled){background:#f8fafc;border-color:#b7c0cc}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.primary:hover:not(:disabled){background:#1a45be;border-color:#1a45be}
+button.big{width:100%;padding:11px 14px;font-size:15px;min-height:44px}
+button.small{padding:5px 10px;min-height:32px;font-size:13px}
+button.icon{width:32px;padding:0}
+button.link{border:none;background:none;color:var(--accent);padding:4px 0;min-height:0;text-decoration:underline;text-underline-offset:2px;font-size:13px;font-weight:650}
+button.link:hover{background:none}
+button.danger{color:var(--danger);border-color:#f0c4c4;background:#fff}
+button.danger:hover:not(:disabled){background:#fff5f5}
+button:disabled{opacity:.48;cursor:not-allowed}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .row>*{flex:1}
-.hint{font-size:.9rem;color:var(--muted);margin-top:4px}
+.row.end{justify-content:flex-end}
+.row.end>*{flex:0 0 auto}
+.hint{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.4}
 .fileinput{display:flex;gap:6px}
 .fileinput input{flex:1;min-width:0}
 .fileinput button{white-space:nowrap}
-details.adv{margin-top:14px;border:1px dashed #cfd5dd;border-radius:8px;padding:8px 12px}
-details.adv summary{cursor:pointer;color:var(--muted);font-size:.95rem;font-weight:600}
-details.adv label{font-size:.9rem}
-.log{font:.85rem/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-word;max-height:260px;overflow-y:auto;overflow-x:hidden;margin-top:12px}
+details.adv{margin-top:12px;border:1px dashed var(--line-strong);border-radius:8px;padding:8px 12px;background:#fff}
+details.adv summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:650}
+details.adv label{font-size:13px}
+.log{font:12px/1.45 var(--mono);background:#0f172a;color:#e2e8f0;padding:12px;border-radius:10px;white-space:pre-wrap;word-break:break-word;max-height:240px;overflow:auto;margin-top:12px}
 .log.ok{background:#052e16;color:#bbf7d0}
 .log.err{background:#450a0a;color:#fecaca}
-/* ---- canvas ---- */
-.toolbar{position:absolute;top:12px;left:14px;right:14px;display:flex;gap:8px;align-items:center;z-index:2}
-.toolbar .status{font-size:.9rem;color:var(--muted);background:rgba(255,255,255,.95);padding:8px 12px;border-radius:8px;border:1px solid var(--line);max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ---- canvas chrome ---- */
+.chrome{position:absolute;top:12px;left:12px;right:12px;z-index:2;display:flex;flex-direction:column;gap:8px;align-items:flex-start;pointer-events:none}
+.chrome>*{pointer-events:auto}
+.toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;width:100%;padding:6px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);backdrop-filter:blur(10px)}
 .toolbar .spacer{flex:1}
-.toolbar button{white-space:nowrap;flex:none}
-.toolbar a.status{color:var(--accent);text-decoration:none;font-weight:600}
-.toolbar select.status{width:128px!important;flex:none;padding:7px 10px;color:var(--accent);font-weight:600;cursor:pointer;font-size:.9rem}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.9rem;position:absolute;left:14px;bottom:12px;background:rgba(255,255,255,.95);padding:8px 12px;border-radius:8px;border:1px solid var(--line)}
-.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.tool-cluster{display:flex;gap:6px;align-items:center;flex:none;flex-wrap:wrap;max-width:100%}
+.tool-cluster+.tool-cluster{padding-left:6px;border-left:1px solid var(--line)}
+.toolbar button{white-space:nowrap}
+#artifacts{width:132px;max-width:132px;flex:none;min-height:32px;padding:4px 8px;font-size:13px;font-weight:700;color:var(--accent);border-color:transparent;background:var(--accent-soft);cursor:pointer}
+#artifacts:hover{background:var(--accent-soft)}
+.status{max-width:min(760px,100%);background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px;color:var(--muted);line-height:1.4;box-shadow:var(--shadow);backdrop-filter:blur(10px);overflow-wrap:anywhere}
+.legend{display:flex;gap:10px 12px;flex-wrap:wrap;font-size:12px;font-weight:600;color:var(--muted);position:absolute;left:12px;bottom:12px;max-width:calc(100% - 210px);background:rgba(255,255,255,.94);padding:7px 10px;border-radius:10px;border:1px solid var(--line);box-shadow:var(--shadow)}
+main:has(#drawer.open) .legend{max-width:calc(100% - 24px)}
+.legend span{white-space:nowrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.gesture-hint{position:absolute;right:12px;bottom:12px;margin:0;font-size:12px;color:var(--faint);background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:10px;padding:7px 10px;box-shadow:var(--shadow)}
+#canvas:has(#empty:not([hidden])) .legend,
+#canvas:has(#empty:not([hidden])) .gesture-hint,
+main:has(#drawer.open) .gesture-hint{display:none}
+.findbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%;padding:6px 8px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);backdrop-filter:blur(10px)}
+.findbar[hidden]{display:none !important}
+.findbar input[type=search]{width:min(260px,100%);min-height:32px;padding:4px 10px;font-size:14px;flex:1 1 180px}
+.kindf{display:flex;gap:4px;flex:none}
+.kindf button{min-height:28px;padding:2px 9px;border-radius:999px;font-size:12px}
+.kindf button[aria-pressed="false"]{color:var(--faint);background:#f4f6f8;text-decoration:line-through}
+#findMeta{font-size:12px;color:var(--muted);margin-left:auto}
 .node{cursor:pointer}
-.node rect{stroke:#fff;stroke-width:1.5;rx:9}
-.node.selected rect{stroke:var(--ink);stroke-width:3}
-.node text{fill:#fff;font-size:14px;pointer-events:none}
-.node text.type{font-size:11px;opacity:.85}
+.node.dim,.edge.dim{opacity:.16}
+.edgelabel.dim{opacity:.2}
+.node rect.body{stroke:rgba(255,255,255,.35);stroke-width:1}
+.node.selected rect.body{stroke:#fff;stroke-width:2.5}
+.node rect.outline{fill:none;stroke:#111827;stroke-width:1.75}
+.node rect.outline.linked{stroke:#042f2e}
+.node text{fill:#fff;font-size:13.5px;pointer-events:none}
+.node text.type{font-size:10.5px;font-weight:650;letter-spacing:.03em;text-transform:uppercase;opacity:.92}
 .edge{fill:none;stroke:#94a3b8;stroke-width:1.6;marker-end:url(#arrow)}
-.edge.highlight{stroke:var(--accent);stroke-width:3}
-.edgelabel{font-size:11px;fill:#64748b;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
-.empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);text-align:center;padding:40px;pointer-events:none;font-size:1.1rem}
+.edge.highlight{stroke:var(--accent);stroke-width:2.4;marker-end:url(#arrowOn)}
+.edgelabel{font-size:11px;fill:#475569;font-weight:650;paint-order:stroke;stroke:#f8fafc;stroke-width:4px;stroke-linejoin:round}
+.empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:left;padding:88px 28px 72px;pointer-events:none}
 .empty[hidden]{display:none}
-.empty div{max-width:460px}
-.empty b{color:var(--ink)}
+.empty-card{width:min(460px,100%);background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px 22px 18px}
+.empty-card h2{margin:10px 0 6px;font-size:22px;letter-spacing:-.02em;color:var(--ink)}
+.empty-card p{margin:0 0 12px;color:var(--muted);font-size:14px}
+.empty-card ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.empty-card li{display:flex;gap:10px;align-items:baseline;font-size:14px;color:var(--ink)}
+.empty-card li span{flex:none;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.empty-mini{display:flex;gap:8px;align-items:center;color:var(--faint);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.empty-mini .swatches{display:inline-flex;gap:4px}
+.empty-mini i{width:14px;height:8px;border-radius:2px;display:block}
+.empty-mini i:nth-child(1){background:var(--dataset)}
+.empty-mini i:nth-child(2){background:var(--computation)}
+.empty-mini i:nth-child(3){background:var(--schema)}
 /* ---- drawer ---- */
-#drawer{display:flex;min-height:0;width:0;transition:width .15s ease}
+#drawer{display:flex;min-height:0;width:0;overflow:hidden;transition:width .16s ease;background:var(--panel)}
 #drawer.open{width:var(--drawer)}
-#drawer.max{width:min(60vw,1100px)}
-.handle{width:8px;cursor:col-resize;background:linear-gradient(to right,transparent 2px,#cfd5dd 2px,#cfd5dd 4px,transparent 4px);flex:none}
-.handle:hover{background:linear-gradient(to right,transparent 1px,var(--accent) 1px,var(--accent) 5px,transparent 5px)}
-#editor{flex:1;min-width:0;background:var(--panel);border-left:1px solid var(--line);padding:16px 20px;overflow:auto}
-#editor .head{display:flex;gap:6px;align-items:center;margin-bottom:4px}
+#drawer.max{width:min(64vw,1100px)}
+.handle{width:10px;cursor:col-resize;background:linear-gradient(to right,transparent 3px,#d5dbe3 3px,#d5dbe3 5px,transparent 5px);flex:none}
+.handle:hover,.handle:focus-visible{background:linear-gradient(to right,transparent 2px,var(--accent) 2px,var(--accent) 6px,transparent 6px)}
+#editor{flex:1;min-width:0;background:var(--panel);border-left:1px solid var(--line);border-top:3px solid var(--entity);padding:14px 16px 28px;overflow:auto}
+#editor[data-kind="dataset"]{--entity:var(--dataset)}
+#editor[data-kind="software"]{--entity:var(--software)}
+#editor[data-kind="computation"]{--entity:var(--computation)}
+#editor[data-kind="mlmodel"]{--entity:var(--mlmodel)}
+#editor[data-kind="schema"]{--entity:var(--schema)}
+#editor[data-kind="root"]{--entity:var(--root)}
+#editor[data-kind="linked"]{--entity:var(--linked)}
+#editor[data-kind="other"]{--entity:var(--other)}
+#editor .head{display:flex;gap:8px;align-items:center;position:sticky;top:0;z-index:1;background:var(--panel);margin:-14px -16px 8px;padding:12px 16px 8px;border-bottom:1px solid var(--line)}
 #editor .head .badge{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-#editor .head button.small{flex:none;padding:5px 8px}
 #editor .head .spacer{flex:1}
-#editor h3{margin:8px 0 2px;font-size:1.25rem;word-break:break-word}
-.badge{font-size:.85rem;padding:3px 10px;border-radius:99px;background:var(--accent-soft);color:#2748a8;font-weight:600}
-.idline{font-size:.85rem;color:var(--muted);word-break:break-all;margin-bottom:14px}
-.kv{display:grid;grid-template-columns:minmax(110px,32%) 1fr auto;gap:8px;align-items:start;margin-bottom:10px}
-.kv .k{font-size:.95rem;color:var(--muted);padding-top:10px;word-break:break-all}
+#editor h3{margin:0 0 4px;font-size:22px;line-height:1.25;letter-spacing:-.02em;word-break:break-word}
+.badge{font-size:12px;padding:3px 8px;border-radius:999px;background:color-mix(in srgb,var(--entity) 14%,white);color:var(--ink);font-weight:700}
+.idline{font:12px/1.4 var(--mono);color:var(--faint);word-break:break-all;margin-bottom:10px}
+.viewbar{margin:0 0 14px}
+.viewbar .seg{display:flex;width:100%}
+.viewbar .seg button{flex:1}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+.kv .k{font-size:12px;font-weight:700;color:var(--muted);padding-top:0;word-break:break-word}
+.kv textarea,.kv input,.kv select,.kv .refs{grid-column:1 / -1}
 .kv textarea{min-height:44px}
-.kv .refs{font-size:.95rem;padding-top:8px}
-.kv .refs a{color:var(--accent)}
-.kv .refs button{padding:0 6px;font-size:.8rem;margin-left:4px}
-.kv .x{padding:8px 10px;color:var(--muted)}
-.problem{font-size:.95rem;color:var(--danger);margin:6px 0;padding:8px 10px;background:#fff1f1;border-radius:6px}
-.note{font-size:.95rem;color:#134e4a;margin:6px 0;padding:8px 10px;background:#ecfdf5;border-left:3px solid var(--linked);border-radius:6px}
-details.more{margin:14px 0 0;border-top:1px solid var(--line);padding-top:10px}
-#aiready{margin-top:18px;border-top:2px solid var(--line);padding-top:12px}
-#aiready h4{margin:0 0 4px;font-size:1.1rem}
-#aiready .lead{color:var(--muted);font-size:.9rem;margin:0 0 10px}
-.grp{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:#fafbfc}
-.grp summary{padding:10px 12px;cursor:pointer;display:flex;gap:10px;align-items:center;font-weight:600}
-.grp summary .cnt{margin-left:auto;font-size:.85rem;font-weight:600;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:99px;padding:1px 9px}
-.grp summary .cnt.done{color:var(--ok);border-color:#bbf7d0;background:#f0fdf4}
-.grp .blurb{color:var(--muted);font-size:.85rem;padding:0 12px 6px}
-.frow{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;border-top:1px solid #eef0f3;background:#fff}
-.frow:last-child{border-radius:0 0 8px 8px}
+.kv .refs{font-size:14px;padding-top:2px}
+.kv .refs a{color:var(--accent);font-weight:650}
+.kv .refs button{padding:0 6px;min-height:24px;font-size:13px;margin-left:4px}
+.kv .x{grid-column:2;grid-row:1;padding:0 8px;min-height:28px;color:var(--faint);border-color:transparent;background:transparent}
+.kv .x:hover{color:var(--danger);background:#fff5f5;border-color:#f0c4c4}
+.problem{font-size:14px;color:#7f1d1d;margin:6px 0;padding:8px 10px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca}
+.note{font-size:14px;color:#134e4a;margin:6px 0;padding:8px 10px;background:#ecfdf5;border-left:3px solid var(--linked);border-radius:8px}
+details.more{margin:16px 0 0;border-top:1px solid var(--line);padding-top:10px}
+details.more summary{cursor:pointer;color:var(--muted);font-weight:700;font-size:13px}
+#aiready,#improve{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+#aiready h4,#improve h4{margin:0 0 6px;font-size:15px;letter-spacing:-.01em}
+#aiready .lead,#improve .lead{color:var(--muted);font-size:13px;margin:0 0 12px;line-height:1.45}
+#improve .lead{border-left:3px solid var(--accent);padding:2px 0 2px 10px}
+#improve .lead b{color:var(--ink)}
+.grp{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#fafbfc;overflow:hidden}
+.grp[data-effort="1"]{box-shadow:inset 3px 0 0 var(--ok)}
+.grp[data-effort="2"]{box-shadow:inset 3px 0 0 var(--accent)}
+.grp[data-effort="3"]{box-shadow:inset 3px 0 0 var(--warn)}
+.grp[data-effort="job"]{box-shadow:inset 3px 0 0 var(--root)}
+.grp summary{padding:10px 12px;cursor:pointer;display:flex;gap:10px;align-items:center;font-weight:700;font-size:14px}
+.grp summary .cnt{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+.grp summary .cnt.done{color:var(--ok);border-color:#a7f3d0;background:#ecfdf5}
+.grp summary .cnt.todo{color:var(--accent-ink-soft);border-color:#c7d7fb;background:var(--accent-soft)}
+.grp .blurb{color:var(--muted);font-size:12.5px;padding:0 12px 8px;line-height:1.4}
+.frow{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-top:1px solid #eef1f5;background:#fff}
 .frow .t{flex:1;min-width:0}
-.frow .t b{display:block;font-size:.95rem}
-.frow .t small{display:block;color:var(--muted);font-size:.85rem;line-height:1.35}
+.frow .t b{display:block;font-size:14px;line-height:1.35}
+.frow .t small{display:block;color:var(--muted);font-size:12.5px;line-height:1.4;margin-top:2px}
 .frow .t small.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .frow .t small.clamp:hover{-webkit-line-clamp:unset}
-.frow button{flex:none;padding:5px 10px;font-size:.9rem}
-.frow .have{flex:none;color:var(--ok);font-weight:600;font-size:.9rem;padding-top:4px}
-.frow.req b::after{content:' *';color:var(--danger)}
-details.more summary{cursor:pointer;color:var(--muted);font-weight:600}
-/* ---- drawer view toggle + Improve ---- */
-.seg{display:inline-flex;flex:none;border:1px solid #cfd5dd;border-radius:8px;overflow:hidden}
-.seg button{border:none;border-radius:0;padding:5px 9px;font-size:.9rem;background:#fff;color:var(--muted);white-space:nowrap}
-.seg button+button{border-left:1px solid #cfd5dd}
-.seg button.on{background:var(--accent);color:#fff;font-weight:600}
-#improve{margin-top:18px;border-top:2px solid var(--line);padding-top:12px}
-#improve h4{margin:0 0 4px;font-size:1.1rem}
-#improve .lead{color:var(--muted);font-size:.9rem;margin:0 0 10px}
-#improve .lead b{color:var(--ink)}
-.frow .t small.lift{color:#2748a8}
-.frow .t small.lift .short{font-weight:600}
-.frow.done .t b{color:var(--muted)}
-.frow.done .t small{color:#9ca3af}
-.frow .win{display:inline-block;font-size:.75rem;font-weight:600;color:#065f46;background:#d1fae5;border-radius:99px;padding:0 7px;margin-left:6px;vertical-align:1px}
-.frow.job .t code{font-size:.85rem;background:#f1f3f6;border-radius:4px;padding:1px 6px}
+.frow button{flex:none;min-height:32px;padding:4px 10px;font-size:13px}
+.frow .have{flex:none;color:var(--ok);font-weight:700;font-size:12.5px;padding-top:6px}
+.frow.req b::after{content:" *";color:var(--danger)}
+.frow .t small.lift{color:var(--accent-ink-soft)}
+.frow .t small.lift .short{font-weight:750}
+.frow.done .t b{color:var(--faint);font-weight:600}
+.frow .win{display:inline-block;font-size:11px;font-weight:750;color:#065f46;background:#d1fae5;border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:1px}
+.frow.job .t code{font-size:12px;background:#f1f5f9;border-radius:4px;padding:1px 5px}
 .frow.job .t small.why{color:var(--ink)}
-.sublist{padding:4px 12px 8px 24px;background:#fff;border-top:1px solid #eef0f3}
-.sublist .frow{padding:5px 0;border-top:none}
-.sublist .frow .t b{font-weight:500;font-size:.9rem}
-.grp summary .cnt.todo{color:#2748a8;border-color:#bfd0fb;background:var(--accent-soft)}
-.dlg .box{width:520px}
-.dlg .box label{font-weight:400;display:flex;gap:8px;align-items:flex-start;margin:6px 0}
-.dlg .box label input{margin-top:5px}
-.dlg .box p{margin:0}
-/* ---- browser dialog ---- */
-.browser{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:9}
-.browser .box{background:#fff;width:640px;max-height:75vh;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px}
-.browser ul{list-style:none;margin:0;padding:0;overflow:auto;flex:1;border:1px solid var(--line);border-radius:8px;min-height:200px}
-.browser li{padding:9px 12px;cursor:pointer;border-bottom:1px solid #f1f3f6;font-size:1rem}
+.sublist{padding:2px 12px 8px 22px;background:#fff;border-top:1px solid #eef1f5}
+.sublist .frow{padding:6px 0;border-top:none}
+.sublist .frow .t b{font-weight:550;font-size:13px}
+.seg{display:inline-flex;flex:none;border:1px solid var(--line-strong);border-radius:9px;overflow:hidden;background:#fff}
+.seg button{border:none;border-radius:0;padding:7px 10px;min-height:34px;font-size:13px;background:transparent;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--ink);color:#fff}
+.seg button:hover:not(.on):not(:disabled){background:#f8fafc}
+/* ---- dialogs ---- */
+.browser{position:fixed;inset:0;background:rgba(15,23,42,.46);display:flex;align-items:center;justify-content:center;z-index:20;padding:18px}
+.browser .box{background:#fff;width:min(640px,100%);max-height:min(78vh,760px);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--elev);border:1px solid rgba(255,255,255,.4)}
+.dlg .box{width:min(520px,100%)}
+.browser .box h3{margin:0;font-size:18px;letter-spacing:-.02em}
+.browser .box p{margin:0}
+.dlg .box label{font-weight:500;display:flex;gap:8px;align-items:flex-start;margin:2px 0}
+.dlg .box label input{margin-top:3px;width:auto}
+.browser ul{list-style:none;margin:0;padding:0;overflow:auto;flex:1;border:1px solid var(--line);border-radius:10px;min-height:200px}
+.browser li{padding:9px 12px;cursor:pointer;border-bottom:1px solid #f1f4f8;font-size:14px}
 .browser li:hover{background:var(--accent-soft)}
-.browser li.dir{font-weight:600}
+.browser li.dir{font-weight:700}
 .browser li.pick{background:#fff7e6}
+aside,.rail-scroll,#editor,.log,.browser ul{scrollbar-width:thin;scrollbar-color:#cbd2dc transparent}
+body.rail-hidden{--left:0px}
+body.rail-hidden #left{visibility:hidden;border-right:0;pointer-events:none}
+@media (max-width:980px){
+  .brand-text p{display:none}
+  .brand-text h1{white-space:nowrap;font-size:14px}
+  .mark{width:30px;height:30px}
+  .crate-chip{max-width:34vw}
+  header{gap:8px;padding:8px 10px}
+  main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+  #canvas{grid-column:1;grid-row:1}
+  #left{position:absolute;z-index:5;inset:0 auto 0 0;width:min(440px,100%);max-height:none;visibility:visible;pointer-events:auto;border-right:0;box-shadow:var(--elev)}
+  body.rail-hidden #left{display:none}
+  .rail-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);font-weight:700}
+  #drawer{position:absolute;z-index:6;top:0;right:0;bottom:0;background:var(--panel);box-shadow:var(--elev)}
+  #drawer.open,#drawer.max{width:min(100%,480px)}
+  .legend{max-width:calc(100% - 24px);flex-wrap:wrap;bottom:8px}
+  .crate-chip{display:none}
+  .gesture-hint{display:none}
+  .header-actions{gap:6px}
+  label.export-label{font-size:0}
+  label.export-label select{min-width:0;width:104px}
+  #btnSave{padding:8px 10px}
+}
+@media (prefers-reduced-motion:reduce){
+  #drawer{transition:none}
+}
 </style>
 </head>
 <body>
+<a class="skip" href="#canvas">Skip to the crate map</a>
 <header>
-  <h1>RO-Crate Studio</h1>
+  <div class="brand">
+    <span class="mark" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="1.5" y="3" width="6" height="4.5" rx="1.2" fill="#93c5fd"/><rect x="12" y="2" width="6.5" height="4.5" rx="1.2" fill="#fdba74"/><rect x="7" y="13" width="6.5" height="4.5" rx="1.2" fill="#6ee7b7"/><path d="M7.5 5.2h4.5M15.2 6.5 11.2 13M4.5 7.5 8.5 13" stroke="#fff" stroke-width="1.2"/></svg></span>
+    <div class="brand-text">
+      <h1>RO-Crate Studio</h1>
+      <p>Turn a run into a provenance map</p>
+    </div>
+  </div>
+  <button type="button" id="crateTitle" class="crate-chip" hidden title="Edit the crate title, author, and description"></button>
   <span class="spacer"></span>
-  <span id="crateTitle" class="badge" hidden title="Click to edit the crate's own title, author, description…" style="cursor:pointer"></span>
-  <!-- <button id="btnValidate" disabled>Check for problems</button> -->
-  <select id="exportPlugin" disabled style="font-weight:600"><option value="">Export as…</option></select>
-  <button id="btnSave" class="primary" disabled>Save crate</button>
+  <div class="header-actions">
+    <!-- <button id="btnValidate" disabled>Check for problems</button> -->
+    <label class="export-label">Export
+      <select id="exportPlugin" disabled><option value="">Choose format…</option></select>
+    </label>
+    <button type="button" id="btnSave" class="primary" disabled>Save crate</button>
+  </div>
 </header>
 <main>
   <aside id="left">
+    <div class="rail-bar"><span>Steps</span><button type="button" class="small" id="btnRailClose">Close</button></div>
+    <div class="rail-scroll">
     <div class="step" id="step1">
       <h2><span class="n">1</span>What do you have?</h2>
-      <p class="lead">Pick the thing you want to describe. We'll turn it into an RO-Crate.</p>
-      <select id="kind"></select>
+      <p class="lead">Pick the thing you want to describe. The studio turns it into an RO-Crate.</p>
+      <select id="kind" aria-label="What you have"></select>
       <p class="hint" id="kindBlurb"></p>
     </div>
 
@@ -182,56 +296,77 @@ details.more summary{cursor:pointer;color:var(--muted);font-weight:600}
 
     <div class="step" id="step3">
       <h2><span class="n">3</span>Describe it</h2>
-      <p class="lead">A few words so people know what this is. Everything is optional.</p>
+      <p class="lead">A few words so a reader knows what this is. Everything here is optional.</p>
       <form id="metaForm" onsubmit="return false">
-        <label>Title</label><input type="text" name="name" placeholder="e.g. Iris classifier experiment, March run">
-        <label>Author <span class="opt">(you, or the lab)</span></label><input type="text" name="author">
-        <label>Short description</label><textarea name="description" placeholder="What was done, on what data, for what purpose."></textarea>
-        <label>Keywords <span class="opt">(comma separated)</span></label><input type="text" name="keywords" placeholder="proteomics, cell map, …">
+        <label>Title</label><input type="text" name="name" autocomplete="off" placeholder="e.g. Iris classifier experiment, March run">
+        <label>Author <span class="opt">(you, or the lab)</span></label><input type="text" name="author" autocomplete="name">
+        <label>Short description</label><textarea name="description" placeholder="What was done, on what data, and for what purpose."></textarea>
+        <label>Keywords <span class="opt">(comma separated)</span></label><input type="text" name="keywords" autocomplete="off" placeholder="proteomics, cell map, …">
       </form>
     </div>
-
-    <button id="btnGo" class="primary big">Build crate</button>
-    <button id="btnStop" class="danger big" hidden>Stop the run</button>
     <div id="runLog" class="log" hidden></div>
+    </div>
+    <div class="rail-foot">
+      <button type="button" id="btnGo" class="primary big">Build crate</button>
+      <button type="button" id="btnStop" class="danger big" hidden>Stop the run</button>
+    </div>
   </aside>
 
   <section id="canvas">
-    <div class="toolbar">
-      <span class="status" id="status">Nothing loaded yet</span>
-      <span class="spacer"></span>
-      <select id="artifacts" class="status" hidden title="Pages and files that sit next to the saved crate, and the fairscape-artifacts build that makes them (datasheet, previews, evidence graph, AI-readiness review)"><option value="">Artifacts ▾</option></select>
-      <button id="btnRoot" class="small primary" hidden>✎ Edit crate details</button>
-      <button id="btnAdd" class="small">+ Add entity</button>
-      <button id="btnLinkCrate" class="small" hidden title="Reuse another crate's identifiers for inputs it produced, so the two crates form one provenance chain">⇄ Link inputs…</button>
-      <button id="btnFit" class="small">Fit</button>
-      <button id="btnJson" class="small">JSON</button>
+    <div class="chrome">
+      <div class="toolbar" role="toolbar" aria-label="Crate map">
+        <button type="button" id="btnRail" class="small" aria-pressed="true">Hide steps</button>
+        <span class="spacer"></span>
+        <div class="tool-cluster">
+          <select id="artifacts" hidden title="Pages next to the saved crate, and the build that makes the datasheet, previews, evidence graph, and AI-readiness review"><option value="">Artifacts</option></select>
+          <button type="button" id="btnRoot" class="small primary" hidden>Edit crate</button>
+          <button type="button" id="btnAdd" class="small">Add entity</button>
+          <button type="button" id="btnLinkCrate" class="small" hidden title="Reuse another crate's identifiers for inputs it produced, so the two crates form one provenance chain">Link inputs</button>
+        </div>
+        <div class="tool-cluster">
+          <button type="button" id="btnFit" class="small">Fit</button>
+          <button type="button" id="btnJson" class="small">JSON</button>
+        </div>
+      </div>
+      <div class="findbar" id="findbar" hidden>
+        <input id="findBox" type="search" placeholder="Find a box by name" aria-label="Find a box by name" autocomplete="off">
+        <div class="kindf" id="kindFilters" role="group" aria-label="Kinds to show">
+          <button type="button" data-kind="dataset" aria-pressed="true">Data</button>
+          <button type="button" data-kind="software" aria-pressed="true">Software</button>
+          <button type="button" data-kind="computation" aria-pressed="true">Computation</button>
+        </div>
+        <span id="findMeta"></span>
+      </div>
+      <div id="status" class="status" role="status">Nothing loaded yet. Choose a source on the left.</div>
     </div>
-    <div class="empty" id="empty"><div><b>Start on the left.</b><br>Choose what you have, point at it, and click <b>Build crate</b>.<br><br>Your crate will appear here as a map: each box is a piece of the crate, arrows show what was used to make what. Click any box to read or fix its details. The dark box is the crate itself: its title, author and description live there.</div></div>
-    <svg id="svg"><defs><marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs><g id="view"></g></svg>
+    <div class="empty" id="empty"><div class="empty-card"><div class="empty-mini"><span class="swatches" aria-hidden="true"><i></i><i></i><i></i></span> Provenance map</div><h2>The crate appears here</h2><p>Each box is one part of the crate. Arrows run from what was used to what was made. The dark box is the crate itself.</p><ol><li><span>1</span><div><b>Choose</b> what you already have, or a workflow to run.</div></li><li><span>2</span><div><b>Point</b> at the file or folder. Browse if you are not sure of the path.</div></li><li><span>3</span><div><b>Build</b> the crate, then click any box to read or fix it.</div></li></ol></div></div>
+    <svg id="svg" role="group" aria-label="Provenance map"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker><marker id="arrowOn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1e4fd7"/></marker><filter id="soft" x="-20%" y="-30%" width="140%" height="180%"><feDropShadow dx="0" dy="1" stdDeviation="1.3" flood-color="#0f172a" flood-opacity="0.2"/></filter></defs><g id="view"></g></svg>
     <div class="legend">
       <span><i style="background:var(--dataset)"></i>Data</span>
       <span><i style="background:var(--software)"></i>Software</span>
       <span><i style="background:var(--computation)"></i>Computation</span>
       <span><i style="background:var(--mlmodel)"></i>Model</span>
       <span><i style="background:var(--schema)"></i>Schema</span>
-      <span><i style="background:var(--root)"></i>The crate itself</span>
-      <span><i style="background:var(--linked)"></i>Another crate &amp; what came from it</span>
+      <span><i style="background:var(--root)"></i>The crate</span>
+      <span><i style="background:var(--linked)"></i>Linked crate</span>
     </div>
+    <p class="gesture-hint">Drag to move · scroll to zoom</p>
   </section>
 
   <div id="drawer">
-    <div class="handle" id="handle" title="drag to resize"></div>
-    <section id="editor">
+    <div class="handle" id="handle" title="Drag to resize the details" role="separator" aria-orientation="vertical" aria-label="Resize details"></div>
+    <section id="editor" aria-label="Entity details">
       <div class="head">
         <span id="edType" class="badge"></span>
-        <span class="seg" id="viewSeg" title="All properties: every field FAIRSCAPE knows, grouped. Improve: what to fill in next, ranked by the last AI-readiness build"><button data-view="all" class="on">All fields</button><button data-view="improve">Improve</button></span>
         <span class="spacer"></span>
-        <button id="btnMax" class="small" title="expand / shrink">⤢</button>
-        <button id="btnClose" class="small" title="close">✕</button>
+        <button type="button" id="btnMax" class="small icon" title="Expand or shrink" aria-label="Expand or shrink details">⤢</button>
+        <button type="button" id="btnClose" class="small icon" title="Close" aria-label="Close details">✕</button>
       </div>
       <h3 id="edName"></h3>
       <div class="idline" id="edId"></div>
+      <div class="viewbar">
+        <div class="seg" id="viewSeg" role="tablist" aria-label="Detail view" title="All fields lists every property. Improve ranks what to fill in next from the last AI-readiness build."><button type="button" role="tab" data-view="all" class="on" aria-selected="true">All fields</button><button type="button" role="tab" data-view="improve" aria-selected="false">Improve</button></div>
+      </div>
       <div id="edLinked"></div>
       <div id="edProblems"></div>
       <div id="edFields"></div>
@@ -248,10 +383,10 @@ details.more summary{cursor:pointer;color:var(--muted);font-weight:600}
         <p class="lead" id="improveLead"></p>
         <div id="improveBody"></div>
       </div>
-      <details class="more"><summary>Connect to another box</summary>
+      <details class="more entity-only"><summary>Connect to another box</summary>
         <div class="row" style="margin-top:8px"><select id="linkProp"><option value="usedDataset">used this data</option><option value="usedSoftware">used this software</option><option value="usedMLModel">used this model</option><option value="generatedBy">was made by</option><option value="generated">produced</option></select><select id="linkTarget"></select><button id="btnLink">Connect</button></div>
       </details>
-      <details class="more"><summary>Danger zone</summary>
+      <details class="more entity-only"><summary>Danger zone</summary>
         <button id="btnDelete" class="danger" style="margin-top:8px">Delete this box and its links</button>
       </details>
     </section>
@@ -260,7 +395,7 @@ details.more summary{cursor:pointer;color:var(--muted);font-weight:600}
 
 <script>
 // ---------- state ----------
-const S = { plugins: [], kind: null, crate: null, cratePath: null, selected: null, layout: null, problems: {}, nf: null, smk: null, art: null, built: false, estimate: null, improve: null, view: 'all' };
+const S = { plugins: [], kind: null, crate: null, cratePath: null, selected: null, layout: null, problems: {}, nf: null, smk: null, art: null, built: false, estimate: null, improve: null, view: 'all', query: '', kindsOff: new Set() };
 const $ = s => document.querySelector(s);
 const api = async (path, opts={}) => {
   const r = await fetch(path, {headers:{'Content-Type':'application/json'}, ...opts});
@@ -299,7 +434,17 @@ const kindOf = n => {
 function isRoot(n){ const d = S.crate['@graph'].find(x=>x['@id']==='ro-crate-metadata.json'); return d && d.about && (d.about['@id']||d.about)===n['@id']; }
 const color = k => ({dataset:'var(--dataset)',software:'var(--software)',computation:'var(--computation)',mlmodel:'var(--mlmodel)',schema:'var(--schema)',root:'var(--root)',linked:'var(--linked)'}[k]||'var(--other)');
 const clip = (t,max) => t.length>max ? t.slice(0,max-1)+'…' : t;
-const label = n => clip((n.name || n['@id'] || '').toString(), 24);
+// Titles keep their start. A file name or an id keeps its end, which is the part you recognize.
+function shortName(t, max){
+  t=String(t||'').trim();
+  if(t.length<=max) return t;
+  const base=t.split(/[\\/]/).filter(Boolean).pop()||t;
+  const fileLike=base!==t || /\.[A-Za-z0-9]{1,8}$/.test(base) || !/\s/.test(t);
+  const src=fileLike?base:t;
+  if(src.length<=max) return src;
+  return fileLike ? '…'+src.slice(-(max-1)) : src.slice(0,max-1)+'…';
+}
+const label = n => shortName(n.name || n['@id'] || '', 26);
 const EDGE_PROPS = ['usedDataset','usedSoftware','usedMLModel','generatedBy','generated','hasPart','isPartOf','annotates','usedByComputation','usedBy','sourceOrganization'];
 const refIds = v => [].concat(v||[]).map(x => typeof x==='string' ? x : (x && x['@id'])).filter(Boolean);
 const byId = id => S.crate['@graph'].find(n => n['@id']===id);
@@ -545,6 +690,10 @@ function setCrate(crate, path){
   $('#empty').hidden=true; $('#btnRoot').hidden=false; $('#btnLinkCrate').hidden=false; /* $('#btnValidate').disabled=false; */ $('#btnSave').disabled=false; $('#exportPlugin').disabled=false;
   const root = rootNode();
   const t=$('#crateTitle'); t.hidden=false; t.textContent=(root&&root.name)||'untitled crate';
+  S.query=''; S.kindsOff=new Set();
+  const find=$('#findBox'); if(find) find.value='';
+  document.querySelectorAll('#kindFilters button').forEach(b=>b.setAttribute('aria-pressed','true'));
+  $('#findbar').hidden=false;
   vb=null; draw(true); closeDrawer(); updateStatus(); artifactLinks();
 }
 // the Artifacts dropdown: every page/file found next to the saved crate opens in a
@@ -614,9 +763,11 @@ function confirmBuild(){
       <p class="hint">${S.built ? 'Existing pages are overwritten — including a ro-crate-datasheet.html a workflow plugin may have written. ' : ''}Only files are added; the crate itself is not changed.</p>
       <label><input type="checkbox" id="bNet"><span>Also check identifiers and URLs online <span class="hint">(better evidence for the FAIRness and repository criteria; slower, needs a connection)</span></span></label>
       <div class="row"><button id="bGo" class="primary">${what}</button><button id="bNo">Cancel</button></div></div>`;
+    const cancel=()=>{ ov.remove(); resolve(null); };
+    ov._cancel=cancel;
     document.body.appendChild(ov);
     ov.querySelector('#bGo').onclick=()=>{ const net=ov.querySelector('#bNet').checked; ov.remove(); resolve({network:net}); };
-    ov.querySelector('#bNo').onclick=()=>{ ov.remove(); resolve(null); };
+    ov.querySelector('#bNo').onclick=cancel;
   });
 }
 function estimateLine(est, prev){
@@ -679,60 +830,132 @@ function buildLayout(){
   const connected=new Set(E.flatMap(e=>[e.from,e.to]));
   const maxRank=Math.max(0,...Object.values(rank));
   g.forEach(n=>{ if(!connected.has(n['@id'])){ rank[n['@id']] = kindOf(n)==='root'?0:maxRank+1; } });
-  const cols={}; g.forEach(n=>{(cols[rank[n['@id']]]=cols[rank[n['@id']]]||[]).push(n);});
-  const W=200,H=58,GX=120,GY=24; const pos={};
+  const looseIds=new Set(g.filter(n=>!connected.has(n['@id']) && kindOf(n)!=='root').map(n=>n['@id']));
+  const cols={}; g.forEach(n=>{ if(looseIds.has(n['@id'])) return; (cols[rank[n['@id']]]=cols[rank[n['@id']]]||[]).push(n); });
+  const W=208,H=64,GX=112,GY=22; const pos={};
   const colKeys=Object.keys(cols).map(Number).sort((a,b)=>a-b);
-  let maxH=0; colKeys.forEach(c=>maxH=Math.max(maxH,cols[c].length));
+  let maxH=1; colKeys.forEach(c=>maxH=Math.max(maxH,cols[c].length));
   colKeys.forEach((c,ci)=>{
     const col=cols[c]; col.sort((a,b)=>kindOf(a).localeCompare(kindOf(b))||label(a).localeCompare(label(b)));
     const total=col.length*(H+GY); const y0=(maxH*(H+GY)-total)/2;
     col.forEach((n,i)=>pos[n['@id']]={x:40+ci*(W+GX),y:40+y0+i*(H+GY),w:W,h:H});
   });
-  S.layout={pos,edges:E,nodes:g,width:40+colKeys.length*(W+GX),height:80+maxH*(H+GY)};
+  let width=40+(colKeys.length||1)*(W+GX), height=80+maxH*(H+GY);
+  const loose=g.filter(n=>looseIds.has(n['@id'])).sort((a,b)=>kindOf(a).localeCompare(kindOf(b))||label(a).localeCompare(label(b)));
+  if(loose.length){
+    const rows=loose.length>8?8:loose.length;
+    let x0=40;
+    g.forEach(n=>{ if(looseIds.has(n['@id'])) return; const p=pos[n['@id']]; if(p) x0=Math.max(x0, p.x+p.w+GX); });
+    loose.forEach((n,i)=>{ const col=Math.floor(i/rows), row=i%rows; pos[n['@id']]={x:x0+col*(W+GX), y:40+row*(H+GY), w:W, h:H}; });
+    width=Math.max(width, x0+Math.ceil(loose.length/rows)*(W+GX));
+    height=Math.max(height, 80+rows*(H+GY));
+  }
+  S.layout={pos,edges:E,nodes:g,width,height};
+}
+function passesFilter(n){
+  const k=kindOf(n);
+  if(k==='root'||k==='descriptor') return true;
+  if(S.kindsOff&&S.kindsOff.has(k)) return false;
+  const q=(S.query||'').trim().toLowerCase();
+  if(!q) return true;
+  return ((n.name||'')+' '+(n['@id']||'')+' '+(n.description||'')).toLowerCase().includes(q);
+}
+function focusIds(){
+  if(!S.selected||!S.layout) return null;
+  const ids=new Set([S.selected]);
+  S.layout.edges.forEach(e=>{ if(e.from===S.selected) ids.add(e.to); if(e.to===S.selected) ids.add(e.from); });
+  return ids;
+}
+function nodeDim(n, focus){
+  if(focus) return !focus.has(n['@id']);
+  return !passesFilter(n);
+}
+function syncFind(){
+  const bar=$('#findbar'); if(!bar) return;
+  if(!S.crate||!S.layout){ bar.hidden=true; return; }
+  bar.hidden=false;
+  const nodes=S.layout.nodes.filter(n=>kindOf(n)!=='descriptor');
+  const shown=nodes.filter(passesFilter).length;
+  const filtering=(S.query||'').trim() || (S.kindsOff&&S.kindsOff.size);
+  $('#findMeta').textContent = filtering ? shown+' of '+nodes.length : '';
 }
 function draw(refit){
   buildLayout();
   const {pos,edges,nodes}=S.layout; const view=$('#view'); view.innerHTML='';
+  const focus=focusIds();
   const NS='http://www.w3.org/2000/svg'; const el=(t,a={})=>{const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e;};
   edges.forEach(e=>{
     const a=pos[e.from],b=pos[e.to]; if(!a||!b)return;
+    const fromN=byId(e.from), toN=byId(e.to);
+    const dim=(fromN&&nodeDim(fromN,focus))||(toN&&nodeDim(toN,focus));
+    const hot=!dim && (S.selected===e.from||S.selected===e.to);
     const x1=a.x+a.w,y1=a.y+a.h/2,x2=b.x,y2=b.y+b.h/2; const mx=(x1+x2)/2;
-    const p=el('path',{d:`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`,class:'edge'+((S.selected===e.from||S.selected===e.to)?' highlight':'')});
+    const p=el('path',{d:`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`,class:'edge'+(hot?' highlight':'')+(dim?' dim':'')});
     view.appendChild(p);
-    const t=el('text',{x:mx,y:(y1+y2)/2-4,class:'edgelabel','text-anchor':'middle'}); t.textContent=e.prop; view.appendChild(t);
+    const t=el('text',{x:mx,y:(y1+y2)/2-4,class:'edgelabel'+(dim?' dim':''),'text-anchor':'middle'}); t.textContent=e.prop; view.appendChild(t);
   });
   const nice={dataset:'Data',software:'Software',computation:'Computation',mlmodel:'Model',schema:'Schema',root:'The crate',other:''};
   const ptr=pointerIds();
   nodes.forEach(n=>{
     const p=pos[n['@id']]; const k=kindOf(n); const from=stubOf(n, ptr);
-    const g=el('g',{class:'node'+(S.selected===n['@id']?' selected':''),transform:`translate(${p.x},${p.y})`});
-    g.appendChild(el('rect',{width:p.w,height:p.h,fill:color(k)}));
+    const g=el('g',{class:'node'+(S.selected===n['@id']?' selected':'')+(nodeDim(n,focus)?' dim':''),transform:`translate(${p.x},${p.y})`,filter:'url(#soft)'});
+    g.appendChild(el('rect',{width:p.w,height:p.h,rx:10,fill:color(k),class:'body'}));
     let type = k==='linked' ? (isConstituent(n)?'Crate in this release':'Linked crate') : (nice[k]||typesOf(n).join(', '));
-    // the box is 200px wide and SVG text does not wrap, so name the crate a
+    // the box is ~208px wide and SVG text does not wrap, so name the crate a
     // stub came from only as far as it fits; the tooltip has it in full
-    if (from) type = clip(type+' · from '+(from.name||'another crate'), 30);
-    const t1=el('text',{x:12,y:22,class:'type'}); t1.textContent=type + (S.problems[n['@id']]?'   ⚠ needs attention':''); g.appendChild(t1);
-    const t2=el('text',{x:12,y:43,'font-weight':'600'}); t2.textContent=label(n); g.appendChild(t2);
-    if(k==='root'){ g.appendChild(el('rect',{width:p.w,height:p.h,fill:'none',stroke:'#111827',rx:9,'stroke-width':2,'stroke-dasharray':'5 3'})); }
+    if (from) type = clip(type+' · from '+(from.name||'another crate'), 32);
+    const t1=el('text',{x:12,y:24,class:'type'}); t1.textContent=type; g.appendChild(t1);
+    const t2=el('text',{x:12,y:46,'font-weight':'650'}); t2.textContent=label(n); g.appendChild(t2);
+    if (S.problems[n['@id']]) {
+      g.appendChild(el('circle',{cx:p.w-16,cy:16,r:7,fill:'#b91c1c',stroke:'#fff','stroke-width':1.5}));
+      const bang=el('text',{x:p.w-16,y:20,'text-anchor':'middle','font-weight':'700'}); bang.style.fontSize='11px'; bang.textContent='!'; g.appendChild(bang);
+    }
+    if(k==='root'){ g.appendChild(el('rect',{width:p.w,height:p.h,rx:10,class:'outline','stroke-dasharray':'5 3'})); }
     // a stub is this crate's word for something another crate produced: dashed,
-    // in that crate's colour, so it reads as a doorway rather than an entity
-    if(from||k==='linked'){ g.appendChild(el('rect',{width:p.w,height:p.h,fill:'none',stroke:'#115e59',rx:9,'stroke-width':2,'stroke-dasharray':'4 3'})); }
+    // so it reads as a doorway rather than an ordinary entity
+    if(from||k==='linked'){ g.appendChild(el('rect',{width:p.w,height:p.h,rx:10,class:'outline linked','stroke-dasharray':'4 3'})); }
     const title=el('title');
     title.textContent=(n.name||n['@id'])+'\n'+(n.description||'')
       + (from?`\n\nProduced by ${from.name||'another crate'} — this crate points at it, the chain behind it lives there.`:'')
-      + (k==='linked'?`\n\n${n[SUBCRATE_FIELD]}`:'');
+      + (k==='linked'?`\n\n${n[SUBCRATE_FIELD]}`:'')
+      + (S.problems[n['@id']]?`\n\nNeeds attention: ${S.problems[n['@id']].join('; ')}`:'');
     g.appendChild(title);
     g.onclick=(ev)=>{ev.stopPropagation(); select(n['@id']);};
     view.appendChild(g);
   });
   if(refit || !vb) fit(); else applyVB();
+  syncFind();
 }
 let vb=null;
 function fit(){ const L=S.layout; const svg=$('#svg'); const r=svg.getBoundingClientRect(); if(!r.width)return;
-  const sc=Math.min(r.width/L.width, r.height/L.height, 1.3); const w=r.width/sc,h=r.height/sc;
-  vb={x:-(w-L.width)/2, y:-(h-L.height)/2, w, h}; applyVB(); }
+  const chromeH=document.querySelector('.chrome')?.getBoundingClientRect().height||90;
+  const padTop=Math.max(96, chromeH+18), padBottom=58, padX=36;
+  const availW=Math.max(160, r.width-padX*2), availH=Math.max(160, r.height-padTop-padBottom);
+  const sc=Math.min(availW/L.width, availH/L.height, 1.25);
+  const w=r.width/sc, h=r.height/sc;
+  const left=padX+Math.max(0, (availW-L.width*sc)/2);
+  const top=padTop+Math.max(0, (availH-L.height*sc)/2);
+  vb={x:-(left/r.width)*w, y:-(top/r.height)*h, w, h}; applyVB(); }
 function applyVB(){ $('#svg').setAttribute('viewBox',`${vb.x} ${vb.y} ${vb.w} ${vb.h}`); }
 $('#btnFit').onclick=()=>fit();
+$('#findBox').addEventListener('input',()=>{ S.query=$('#findBox').value; if(S.crate) draw(false); });
+$('#kindFilters').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const on=b.getAttribute('aria-pressed')!=='true';
+  b.setAttribute('aria-pressed', on?'true':'false');
+  if(on) S.kindsOff.delete(b.dataset.kind); else S.kindsOff.add(b.dataset.kind);
+  if(S.crate) draw(false);
+});
+function syncRail(){
+  const hidden=document.body.classList.contains('rail-hidden');
+  const b=$('#btnRail');
+  b.setAttribute('aria-pressed', hidden?'false':'true');
+  b.textContent=hidden?'Show steps':'Hide steps';
+}
+$('#btnRail').onclick=()=>{ document.body.classList.toggle('rail-hidden'); syncRail(); setTimeout(()=>{ if(S.layout) fit(); }, 200); };
+$('#btnRailClose').onclick=()=>{ document.body.classList.add('rail-hidden'); syncRail(); setTimeout(()=>{ if(S.layout) fit(); }, 200); };
+if (matchMedia('(max-width: 980px)').matches) document.body.classList.add('rail-hidden');
+syncRail();
 function editRoot(){ const r=rootNode(); if(r) select(r['@id']); }
 $('#btnRoot').onclick=editRoot; $('#crateTitle').onclick=editRoot;
 (function pz(){ const svg=$('#svg'); let drag=null;
@@ -750,10 +973,17 @@ new ResizeObserver(()=>{ if(!S.layout||!vb) return; const r=$('#svg').getBoundin
 
 // ---------- drawer (slide-out editor) ----------
 const drawer=$('#drawer');
-function openDrawer(){ drawer.classList.add('open'); }
-function closeDrawer(){ drawer.classList.remove('open','max'); S.selected=null; if(S.crate) draw(); }
+function refitSoon(){ setTimeout(()=>{ if(S.layout) fit(); }, 200); }
+function openDrawer(){ const was=drawer.classList.contains('open'); drawer.classList.add('open'); if(!was) refitSoon(); }
+function closeDrawer(){ drawer.classList.remove('open','max'); S.selected=null; if(S.crate) draw(); refitSoon(); }
 $('#btnClose').onclick=closeDrawer;
-$('#btnMax').onclick=()=>drawer.classList.toggle('max');
+document.addEventListener('keydown', e=>{
+  if (e.key!=='Escape') return;
+  const modals=[...document.querySelectorAll('.browser')];
+  if (modals.length){ const top=modals.at(-1); e.preventDefault(); if (top._cancel) top._cancel(); else top.remove(); return; }
+  if (drawer.classList.contains('open')) closeDrawer();
+});
+$('#btnMax').onclick=()=>{ drawer.classList.toggle('max'); refitSoon(); };
 (function resize(){ const h=$('#handle'); let start=null;
   h.addEventListener('mousedown',e=>{ start={x:e.clientX,w:drawer.getBoundingClientRect().width}; drawer.classList.remove('max'); drawer.style.transition='none'; e.preventDefault(); });
   window.addEventListener('mousemove',e=>{ if(!start)return; const w=Math.max(300,Math.min(window.innerWidth*0.7,start.w+(start.x-e.clientX))); document.documentElement.style.setProperty('--drawer',w+'px'); });
@@ -801,11 +1031,21 @@ async function loadImprove(){
   try{ S.improve=await api('/api/improve?path='+encodeURIComponent(S.cratePath)); }catch(e){ S.improve={error:e.message}; }
   renderImprove();
 }
-function setView(v){ S.view=v; document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on', b.dataset.view===v)); $('#aiready').hidden = v!=='all' || $('#aiready').dataset.empty==='1'; $('#improve').hidden = v!=='improve'; if(v==='improve') renderImprove(); }
+function setView(v){
+  S.view=v;
+  const entity=v==='all';
+  document.querySelectorAll('#viewSeg button').forEach(b=>{ const on=b.dataset.view===v; b.classList.toggle('on', on); b.setAttribute('aria-selected', on?'true':'false'); });
+  $('#edFields').hidden=!entity;
+  document.querySelectorAll('.entity-only').forEach(el=>{ el.hidden=!entity; });
+  $('#aiready').hidden = !entity || $('#aiready').dataset.empty==='1';
+  $('#improve').hidden = v!=='improve';
+  if(v==='improve'){ renderImprove(); const ed=$('#editor'); if(ed) ed.scrollTop=0; }
+}
 document.querySelectorAll('#viewSeg button').forEach(b=>b.onclick=()=>setView(b.dataset.view));
 const critNote = c => `${c.id}${c.name?' '+c.name:''}${c.score===null||c.score===undefined?' (not scored)':` (now ${c.score}/2)`}`;
 function improveAdd(item){
   const n=byId(item.target['@id']); if(!n){ alert('That box is no longer in the crate.'); return; }
+  S.view='all';
   addField(n, {key:item.property, kind: item.type==='bool'?'bool' : item.type==='number'?'int' : 'str'});
 }
 // "lifts 0.a Findable (now 1/2), 5.a …" — which of the row's criteria are short
@@ -852,7 +1092,7 @@ function renderImprove(){
     const rows=[]; const perProp={};
     items.forEach(i=>{ if(i.target.kind==='root') rows.push({item:i}); else { if(!perProp[i.property]){ perProp[i.property]={item:i, all:[]}; rows.push(perProp[i.property]); } perProp[i.property].all.push(i); } });
     const todo=rows.filter(r=> r.all ? r.all.some(i=>{const n=byId(i.target['@id']); return n && !isFilled(n[i.property]);}) : !isFilled((byId(r.item.target['@id'])||{})[r.item.property])).length;
-    const d=document.createElement('details'); d.className='grp'; d.open = eff===1 || (eff===2 && todo && !I.needs_grade);
+    const d=document.createElement('details'); d.className='grp'; d.dataset.effort=String(eff); d.open = eff===1 || (eff===2 && todo && !I.needs_grade);
     d.innerHTML=`<summary>${labels[eff]}<span class="cnt ${todo?'todo':'done'}">${todo?todo+' to do':'all filled'}</span></summary>`;
     rows.forEach(r=>{
       if(!r.all){ d.appendChild(improveRow(r.item,false)); return; }
@@ -862,7 +1102,7 @@ function renderImprove(){
     body.appendChild(d);
   }
   if (I.bigger_jobs && I.bigger_jobs.length){
-    const d=document.createElement('details'); d.className='grp'; d.open=!I.needs_grade;
+    const d=document.createElement('details'); d.className='grp'; d.dataset.effort='job'; d.open=!I.needs_grade;
     const n=I.bigger_jobs.filter(j=>j.short).length;
     d.innerHTML=`<summary>Bigger jobs<span class="cnt ${n?'todo':'done'}">${n?n+' would help':'none needed'}</span></summary><div class="blurb">These need new entities, links, checksums or statistics — more than one field. Each is a skill you run in Claude Code on the saved crate; the editor here does not do them.</div>`;
     I.bigger_jobs.forEach(j=>{
@@ -878,6 +1118,7 @@ function showEditor(id){
   const n=id&&byId(id); if(!n){ closeDrawer(); return; }
   openDrawer();
   const k=kindOf(n); const nice={dataset:'Data',software:'Software',computation:'Computation',mlmodel:'Model',schema:'Schema',root:'The crate itself',linked:'Another crate'};
+  $('#editor').dataset.kind=k;
   $('#edType').textContent=nice[k]||typesOf(n).join(', '); $('#edName').textContent=n.name||'(no name yet)'; $('#edId').textContent=n['@id'];
   renderLinked(n, k);
   const box=$('#edFields'); box.innerHTML='';
@@ -955,11 +1196,24 @@ $('#btnDelete').onclick=()=>{ const id=S.selected; if(!id||!confirm('Delete this
   closeDrawer(); touched(); };
 
 // ---------- add entity ----------
+function askEntity(){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div'); ov.className='browser dlg';
+    ov.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-labelledby="entTitle"><h3 id="entTitle">Add an entity</h3><p class="hint">It is added to this crate and selected so you can fill in its fields.</p><label for="entType">Kind</label><select id="entType"><option>Dataset</option><option>Software</option><option>Computation</option><option>MLModel</option><option>Schema</option></select><label for="entName">Name</label><input type="text" id="entName" placeholder="e.g. raw counts, aligner, training step"><div class="row end"><button type="button" id="entCancel">Cancel</button><button type="button" id="entOk" class="primary">Add entity</button></div></div>`;
+    const cancel=()=>{ ov.remove(); resolve(null); };
+    ov._cancel=cancel;
+    document.body.appendChild(ov);
+    const name=ov.querySelector('#entName'); name.focus();
+    ov.querySelector('#entCancel').onclick=cancel;
+    const ok=()=>{ const n=name.value.trim(); if(!n){ name.focus(); return; } const type=ov.querySelector('#entType').value; ov.remove(); resolve({type, name:n}); };
+    ov.querySelector('#entOk').onclick=ok;
+    name.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); ok(); } });
+  });
+}
 $('#btnAdd').onclick=async()=>{
   if(!S.crate){ alert('Build or open a crate first (steps on the left).'); return; }
-  const type=prompt('What kind of box?\n\nDataset, Software, Computation, MLModel or Schema','Dataset'); if(!type)return;
-  const name=prompt('Give it a name'); if(!name)return;
-  try{ const r=await post('/api/entity/new',{crate:S.crate,type,name}); S.crate=r.crate; select(r.id); touched(); }catch(e){alert(e.message);}
+  const spec=await askEntity(); if(!spec) return;
+  try{ const r=await post('/api/entity/new',{crate:S.crate,type:spec.type,name:spec.name}); S.crate=r.crate; select(r.id); touched(); }catch(e){alert(e.message);}
 };
 
 // ---------- validate / save / export / json ----------
@@ -967,7 +1221,36 @@ $('#btnAdd').onclick=async()=>{
 $('#btnValidate').onclick=async()=>{ try{ const r=await post('/api/validate',{crate:S.crate}); S.problems=r.problems||{};
   const n=Object.keys(S.problems).length; alert(n?`${n} ${n===1?'box needs':'boxes need'} attention — they are marked ⚠ on the map. Click one to see what to fix.`:'No problems found. This is a valid RO-Crate.'+(r.advice&&r.advice.length?'\n\nTo score better on AI-readiness you could also add:\n• '+r.advice.slice(0,5).join('\n• '):'')); draw(); if(S.selected)showEditor(S.selected); }catch(e){alert('Could not check: '+e.message);} };
 */
-$('#btnSave').onclick=async()=>{ const p=prompt('Save the crate into which folder?', S.cratePath||S.suggestDir||''); if(!p)return; try{ const r=await post('/api/save',{crate:S.crate,path:p}); S.cratePath=r.path; await artifactLinks(); updateStatus(); if(S.built) $('#status').textContent+='  —  Artifacts ▾ › Rebuild all artifacts & re-score to grade the changes'; alert('Saved:\n'+r.written.join('\n')); }catch(e){alert(e.message);} };
+function askFolder(title, hint, value, okLabel){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div'); ov.className='browser dlg';
+    ov.innerHTML=`<div class="box" role="dialog" aria-modal="true"><h3></h3><p class="hint"></p><div class="fileinput"><input type="text" id="askPath" aria-label="Folder"><button type="button" id="askBrowse">Browse…</button></div><div class="row end"><button type="button" id="askCancel">Cancel</button><button type="button" class="primary" id="askOk"></button></div></div>`;
+    ov.querySelector('h3').textContent=title;
+    ov.querySelector('.hint').textContent=hint;
+    ov.querySelector('#askOk').textContent=okLabel;
+    const input=ov.querySelector('#askPath'); input.value=value||'';
+    const cancel=()=>{ ov.remove(); resolve(null); };
+    ov._cancel=cancel;
+    document.body.appendChild(ov);
+    input.focus(); input.select();
+    ov.querySelector('#askBrowse').onclick=()=>browse(input,'dir');
+    ov.querySelector('#askCancel').onclick=cancel;
+    const ok=()=>{ const v=input.value.trim(); if(!v){ input.focus(); return; } ov.remove(); resolve(v); };
+    ov.querySelector('#askOk').onclick=ok;
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); ok(); } });
+  });
+}
+$('#btnSave').onclick=async()=>{
+  const p=await askFolder('Save crate', 'Folder to write ro-crate-metadata.json into. An existing crate in that folder is replaced.', S.cratePath||S.suggestDir||'', 'Save');
+  if(!p)return;
+  try{
+    const r=await post('/api/save',{crate:S.crate,path:p});
+    S.cratePath=r.path; await artifactLinks(); updateStatus();
+    const extra=S.built?' Rebuild from Artifacts to grade the changes.':'';
+    $('#status').textContent='Saved to '+r.path+'.'+extra;
+    $('#status').title=(r.written||[]).join('\n');
+  }catch(e){alert(e.message);}
+};
 $('#exportPlugin').onchange=async()=>{ const pl=$('#exportPlugin').value; $('#exportPlugin').value=''; if(!pl||!S.crate)return;
   try{ const r=await post('/api/export',{crate:S.crate,plugin:pl}); alert('Exported to:\n'+r.path); }catch(e){alert(e.message);} };
 $('#btnJson').onclick=()=>{ if(!S.crate)return; const w=window.open('','_blank'); w.document.write('<pre style="font:13px monospace;white-space:pre-wrap">'+JSON.stringify(S.crate,null,2).replace(/</g,'&lt;')+'</pre>'); };
@@ -979,7 +1262,25 @@ $('#btnJson').onclick=()=>{ if(!S.crate)return; const w=window.open('','_blank')
   try{ S.nf=await api('/api/nextflow/info'); }catch(e){ S.nf={available:false,reason:e.message,fields:[]}; }
   try{ S.smk=await api('/api/snakemake/info'); }catch(e){ S.smk={available:false,reason:e.message,fields:[]}; }
   try{ S.art=await api('/api/artifacts/info'); }catch(e){ S.art={installed:false,install_command:'pip install fairscape-artifacts'}; }
-  buildKinds(); })();
+  buildKinds();
+  const q=new URLSearchParams(location.search);
+  const openPath=q.get('open');
+  if(openPath){
+    try{
+      const r=await post('/api/open',{path:openPath});
+      setCrate(r.crate, r.crate_path);
+      const find=q.get('find');
+      if(find){ S.query=find; $('#findBox').value=find; }
+      const selName=q.get('select');
+      if(selName){
+        const n=S.crate['@graph'].find(n=>String(n.name||'')===selName || String(n.name||'').includes(selName));
+        if(n) select(n['@id']); else if(find) draw(false);
+      } else if(find) draw(false);
+      if(!document.body.classList.contains('rail-hidden')){ document.body.classList.add('rail-hidden'); syncRail(); }
+      setTimeout(()=>{ if(S.layout) fit(); }, 280);
+    }catch(e){ $('#status').textContent='Could not open that crate: '+e.message; }
+  }
+})();
 </script>
 </body>
 </html>
