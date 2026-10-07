@@ -102,8 +102,12 @@ main:has(#drawer.open) .legend{max-width:calc(100% - 24px)}
 .legend span{white-space:nowrap}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .gesture-hint{position:absolute;right:12px;bottom:12px;margin:0;font-size:12px;color:var(--faint);background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:10px;padding:7px 10px;box-shadow:var(--shadow)}
+.zoomctl{position:absolute;right:12px;bottom:12px;z-index:3;display:flex;align-items:center;gap:4px;padding:4px;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.zoomctl[hidden]{display:none !important}
+.zoomctl .pct{min-width:58px;font-variant-numeric:tabular-nums;font-weight:700}
 #canvas:has(#empty:not([hidden])) .legend,
 #canvas:has(#empty:not([hidden])) .gesture-hint,
+#canvas:has(#empty[hidden]) .gesture-hint,
 main:has(#drawer.open) .gesture-hint{display:none}
 .findbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%;padding:6px 8px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);backdrop-filter:blur(10px)}
 .findbar[hidden]{display:none !important}
@@ -116,7 +120,9 @@ main:has(#drawer.open) .gesture-hint{display:none}
 .node.dim,.edge.dim{opacity:.16}
 .edgelabel.dim{opacity:.2}
 .node rect.body{stroke:rgba(255,255,255,.35);stroke-width:1}
-.node.selected rect.body{stroke:#fff;stroke-width:2.5}
+.node.selected{opacity:1}
+.node.selected rect.halo{fill:none;stroke:#f59e0b;stroke-width:4}
+.node.selected rect.body{stroke:#fff;stroke-width:3}
 .node rect.outline{fill:none;stroke:#111827;stroke-width:1.75}
 .node rect.outline.linked{stroke:#042f2e}
 .node text{fill:#fff;font-size:13.5px;pointer-events:none}
@@ -349,6 +355,11 @@ body.rail-hidden #left{visibility:hidden;border-right:0;pointer-events:none}
       <span><i style="background:var(--schema)"></i>Schema</span>
       <span><i style="background:var(--root)"></i>The crate</span>
       <span><i style="background:var(--linked)"></i>Linked crate</span>
+    </div>
+    <div class="zoomctl" id="zoomCtl" hidden role="group" aria-label="Zoom the map">
+      <button type="button" id="btnZoomOut" class="small icon" aria-label="Zoom out" title="Zoom out. You can also scroll.">−</button>
+      <button type="button" id="btnZoomPct" class="small pct" title="Fit the whole map">100%</button>
+      <button type="button" id="btnZoomIn" class="small icon" aria-label="Zoom in" title="Zoom in. You can also scroll.">+</button>
     </div>
     <p class="gesture-hint">Drag to move · scroll to zoom</p>
   </section>
@@ -896,9 +907,11 @@ function draw(refit){
   });
   const nice={dataset:'Data',software:'Software',computation:'Computation',mlmodel:'Model',schema:'Schema',root:'The crate',other:''};
   const ptr=pointerIds();
-  nodes.forEach(n=>{
+  nodes.slice().sort((a,b)=>(a['@id']===S.selected)-(b['@id']===S.selected)).forEach(n=>{
     const p=pos[n['@id']]; const k=kindOf(n); const from=stubOf(n, ptr);
-    const g=el('g',{class:'node'+(S.selected===n['@id']?' selected':'')+(nodeDim(n,focus)?' dim':''),transform:`translate(${p.x},${p.y})`,filter:'url(#soft)'});
+    const chosen=S.selected===n['@id'];
+    const g=el('g',{class:'node'+(chosen?' selected':'')+(nodeDim(n,focus)?' dim':''),transform:`translate(${p.x},${p.y})`,filter:'url(#soft)'});
+    if(chosen) g.appendChild(el('rect',{x:-8,y:-8,width:p.w+16,height:p.h+16,rx:16,class:'halo'}));
     g.appendChild(el('rect',{width:p.w,height:p.h,rx:10,fill:color(k),class:'body'}));
     let type = k==='linked' ? (isConstituent(n)?'Crate in this release':'Linked crate') : (nice[k]||typesOf(n).join(', '));
     // the box is ~208px wide and SVG text does not wrap, so name the crate a
@@ -935,9 +948,33 @@ function fit(){ const L=S.layout; const svg=$('#svg'); const r=svg.getBoundingCl
   const w=r.width/sc, h=r.height/sc;
   const left=padX+Math.max(0, (availW-L.width*sc)/2);
   const top=padTop+Math.max(0, (availH-L.height*sc)/2);
-  vb={x:-(left/r.width)*w, y:-(top/r.height)*h, w, h}; applyVB(); }
-function applyVB(){ $('#svg').setAttribute('viewBox',`${vb.x} ${vb.y} ${vb.w} ${vb.h}`); }
+  vb={x:-(left/r.width)*w, y:-(top/r.height)*h, w, h}; S.fitPx=r.width/vb.w; applyVB(); }
+function applyVB(){ $('#svg').setAttribute('viewBox',`${vb.x} ${vb.y} ${vb.w} ${vb.h}`); syncZoom(); }
+function syncZoom(){
+  const box=$('#zoomCtl'); if(!box) return;
+  const on=!!(S.crate&&vb);
+  box.hidden=!on;
+  if(!on) return;
+  const r=$('#svg').getBoundingClientRect();
+  const px=r.width&&vb.w?r.width/vb.w:0;
+  const pct=S.fitPx&&px?Math.round(px/S.fitPx*100):100;
+  $('#btnZoomPct').textContent=pct+'%';
+}
+function zoomBy(factor, clientX, clientY){
+  if(!vb) return;
+  const svg=$('#svg'); const r=svg.getBoundingClientRect(); if(!r.width) return;
+  const nextPx=r.width/(vb.w*factor);
+  const base=S.fitPx||nextPx;
+  if(nextPx<base*0.25||nextPx>base*5) return;
+  const mx=clientX==null?vb.x+vb.w/2:vb.x+(clientX-r.left)/r.width*vb.w;
+  const my=clientY==null?vb.y+vb.h/2:vb.y+(clientY-r.top)/r.height*vb.h;
+  vb={x:mx-(mx-vb.x)*factor,y:my-(my-vb.y)*factor,w:vb.w*factor,h:vb.h*factor};
+  applyVB();
+}
 $('#btnFit').onclick=()=>fit();
+$('#btnZoomIn').onclick=()=>zoomBy(0.8);
+$('#btnZoomOut').onclick=()=>zoomBy(1.25);
+$('#btnZoomPct').onclick=()=>fit();
 $('#findBox').addEventListener('input',()=>{ S.query=$('#findBox').value; if(S.crate) draw(false); });
 $('#kindFilters').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
@@ -959,7 +996,7 @@ syncRail();
 function editRoot(){ const r=rootNode(); if(r) select(r['@id']); }
 $('#btnRoot').onclick=editRoot; $('#crateTitle').onclick=editRoot;
 (function pz(){ const svg=$('#svg'); let drag=null;
-  svg.addEventListener('wheel',e=>{ if(!vb)return; e.preventDefault(); const f=e.deltaY>0?1.1:0.9; const r=svg.getBoundingClientRect(); const mx=vb.x+(e.clientX-r.left)/r.width*vb.w, my=vb.y+(e.clientY-r.top)/r.height*vb.h; vb={x:mx-(mx-vb.x)*f,y:my-(my-vb.y)*f,w:vb.w*f,h:vb.h*f}; applyVB(); },{passive:false});
+  svg.addEventListener('wheel',e=>{ if(!vb)return; e.preventDefault(); zoomBy(e.deltaY>0?1.1:0.9, e.clientX, e.clientY); },{passive:false});
   svg.addEventListener('mousedown',e=>{ if(!vb||e.button!==0)return; drag={x:e.clientX,y:e.clientY,vx:vb.x,vy:vb.y,moved:false}; });
   window.addEventListener('mousemove',e=>{ if(!drag)return; if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>3) drag.moved=true; const r=svg.getBoundingClientRect(); vb.x=drag.vx-(e.clientX-drag.x)/r.width*vb.w; vb.y=drag.vy-(e.clientY-drag.y)/r.height*vb.h; applyVB(); });
   window.addEventListener('mouseup',()=>drag=null);
@@ -978,6 +1015,9 @@ function openDrawer(){ const was=drawer.classList.contains('open'); drawer.class
 function closeDrawer(){ drawer.classList.remove('open','max'); S.selected=null; if(S.crate) draw(); refitSoon(); }
 $('#btnClose').onclick=closeDrawer;
 document.addEventListener('keydown', e=>{
+  const typing=e.target.closest&&e.target.closest('input, textarea, select');
+  if(!typing && (e.key==='+'||e.key==='=')){ e.preventDefault(); zoomBy(0.8); return; }
+  if(!typing && (e.key==='-'||e.key==='_')){ e.preventDefault(); zoomBy(1.25); return; }
   if (e.key!=='Escape') return;
   const modals=[...document.querySelectorAll('.browser')];
   if (modals.length){ const top=modals.at(-1); e.preventDefault(); if (top._cancel) top._cancel(); else top.remove(); return; }
