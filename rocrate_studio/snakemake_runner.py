@@ -32,6 +32,9 @@ REPORTER_MODULE = "snakemake_report_plugin_fairscape"
 CRATE_NAME = "ro-crate-metadata.json"
 RECORDS_NAME = "records.json"
 
+#: --use-conda fails outright where there is no conda, even for rules that name no env
+HAVE_CONDA = bool(shutil.which("conda") or shutil.which("mamba") or shutil.which("micromamba"))
+
 FIELDS = [
     {"name": "workflow", "label": "Workflow folder (has a Snakefile)", "type": "dir", "required": True},
     {"name": "snakefile", "label": "Snakefile", "type": "string", "default": "Snakefile",
@@ -40,7 +43,7 @@ FIELDS = [
      "placeholder": "leave empty for the default target"},
     {"name": "cores", "label": "Cores", "type": "string", "default": "4"},
     {"name": "use_conda", "label": "Use the rules' conda environments (--use-conda)",
-     "type": "bool", "default": True},
+     "type": "bool", "default": HAVE_CONDA},
     {"name": "report_only", "label": "Already ran it — just build the package", "type": "bool", "default": False,
      "help": "Skips the run and reports on the finished one in that folder."},
     {"name": "schemas", "label": "Infer schemas for tabular outputs", "type": "bool", "default": True},
@@ -178,7 +181,7 @@ def plan(form: dict) -> dict:
     snakemake_path = _snakemake() or "snakemake"
     common = [snakemake_path, "--snakefile", snakefile,
               "--cores", str(form.get("cores") or "4")]
-    if form.get("use_conda", True):
+    if form.get("use_conda", HAVE_CONDA):
         common.append("--use-conda")
     extra = str(form.get("extra_args") or "").split()
 
