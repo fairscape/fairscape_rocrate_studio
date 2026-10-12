@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -17,4 +17,5 @@ packages = ["rocrate_studio"]
 include-package-data = true
 
 [tool.setuptools.package-data]
-rocrate_studio = ["static/*"]
+# examples/ holds the "Try it with our example first" inputs; ** needs setuptools >= 62
+rocrate_studio = ["static/*", "examples/**/*"]

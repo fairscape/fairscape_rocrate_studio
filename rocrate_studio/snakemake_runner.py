@@ -24,6 +24,7 @@ import threading
 import uuid
 from pathlib import Path
 
+from . import samples
 from .plugins_meta import LINKED_FIELD
 
 REPORTER_PACKAGE = "snakemake-report-plugin-fairscape"
@@ -40,10 +41,10 @@ FIELDS = [
     {"name": "cores", "label": "Cores", "type": "string", "default": "4"},
     {"name": "use_conda", "label": "Use the rules' conda environments (--use-conda)",
      "type": "bool", "default": True},
-    {"name": "report_only", "label": "Already ran it — just build the crate", "type": "bool", "default": False,
+    {"name": "report_only", "label": "Already ran it — just build the package", "type": "bool", "default": False,
      "help": "Skips the run and reports on the finished one in that folder."},
     {"name": "schemas", "label": "Infer schemas for tabular outputs", "type": "bool", "default": True},
-    {"name": "name", "label": "Crate name", "type": "string"},
+    {"name": "name", "label": "Package name", "type": "string"},
     {"name": "description", "label": "Description", "type": "text", "help": "At least 10 characters or it is ignored."},
     {"name": "author", "label": "Author", "type": "string"},
     {"name": "keywords", "label": "Keywords", "type": "string", "placeholder": "comma, separated"},
@@ -140,12 +141,9 @@ def info() -> dict:
     if snakemake_path and not have_reporter:
         reason.append(f"the FAIRSCAPE reporter is not installed in Snakemake's own "
                       f"environment ({python})")
-    example = next((str(p) for p in (
-        Path(__file__).resolve().parents[2] / "fairscape_conversion" / "examples"
-        / "snakemake-variant-calling",
-        Path.home() / "fairscape" / "fairscape_conversion" / "examples"
-        / "snakemake-variant-calling")
-        if (p / "Snakefile").exists()), None)
+    # a three-step letters chain in plain shell, bundled with the studio and
+    # copied where it can write results
+    example = samples.workflow("snakemake-letters")
     return {"available": not reason, "reason": "; ".join(reason), "version": version,
             "python": python, "reporter_installed": have_reporter,
             "install_command": " ".join(install_command(python)),

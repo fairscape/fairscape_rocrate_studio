@@ -235,7 +235,7 @@ def start(path: str, network: bool = False) -> BuildJob:
     if d.is_file():
         d = d.parent
     if not (d / CRATE_NAME).is_file():
-        raise FileNotFoundError(f"no {CRATE_NAME} in {d} — save the crate first")
+        raise FileNotFoundError(f"no {CRATE_NAME} in {d} — save the package first")
     if not installed():
         raise RuntimeError(f"{PACKAGE} is not installed in the studio's environment; run: "
                            + " ".join(install_command()))

@@ -15,14 +15,36 @@ import threading
 import uuid
 from pathlib import Path
 
+from . import samples
 from .plugins_meta import LINKED_FIELD
 
-PLUGIN_VERSION = "0.1.0"
+#: used when no nf-fairscape plugin is installed yet (what `make install` puts there)
+DEFAULT_PLUGIN_VERSION = "0.1.0"
+PLUGINS_DIR = Path.home() / ".nextflow" / "plugins"
+
+
+def plugin_versions() -> list[str]:
+    """nf-fairscape versions installed for Nextflow, oldest first."""
+    found = []
+    for p in PLUGINS_DIR.glob("nf-fairscape-*"):
+        v = p.name.rsplit("-", 1)[-1]
+        try:
+            found.append((tuple(int(x) for x in v.split(".")), v))
+        except ValueError:
+            continue
+    return [v for _, v in sorted(found)]
+
+
+def plugin_version() -> str:
+    """The newest installed plugin: a pipeline pinned to it (the Cell Maps one
+    asks for 0.2.0) and one that never names it both run the same build."""
+    vs = plugin_versions()
+    return vs[-1] if vs else DEFAULT_PLUGIN_VERSION
 CONFIG_NAME = "rocrate-studio.config"
 
 FIELDS = [
     {"name": "pipeline", "label": "Pipeline folder (has main.nf)", "type": "dir", "required": True},
-    {"name": "outdir", "label": "Results folder (crate lands here)", "type": "dir", "default": "results",
+    {"name": "outdir", "label": "Results folder (package lands here)", "type": "dir", "default": "results",
      "help": "Relative paths are inside the pipeline folder."},
     {"name": "author", "label": "Author", "type": "string"},
     {"name": "organization", "label": "Organization", "type": "string"},
@@ -55,7 +77,7 @@ def info() -> dict:
     nf = shutil.which("nextflow")
     java_home = find_java()
     have_java = bool(shutil.which("java") or java_home)
-    plugin_dir = Path.home() / ".nextflow" / "plugins" / f"nf-fairscape-{PLUGIN_VERSION}"
+    plugin_dir = PLUGINS_DIR / f"nf-fairscape-{plugin_version()}"
     reason = []
     if not nf:
         reason.append("nextflow not on PATH")
@@ -71,15 +93,11 @@ def info() -> dict:
             version = out.strip().split()[-1] if out.strip() else ""
         except Exception as e:  # noqa: BLE001
             reason.append(f"nextflow -v failed: {e}")
-    # the slow letters-chain first: three steps that sleep ~12 s each, so a run is
-    # long enough to watch go by; the plugin's test pipeline as a fallback
-    example = next((str(p) for p in (Path.home() / "cellmap" / "nf-fairscape" / "examples" / "letters-chain-slow",
-                                       Path.home() / "nf-fairscape" / "examples" / "letters-chain-slow",
-                                       Path.home() / "cellmap" / "nf-fairscape" / "nf-fairscape-test",
-                                       Path.home() / "nf-fairscape" / "nf-fairscape-test")
-                    if (p / "main.nf").exists()), None)
+    # a letters chain bundled with the studio: three steps that sleep ~3 s each,
+    # so a run is long enough to watch go by; copied where it can write results
+    example = samples.workflow("nextflow-letters")
     return {"available": not reason, "reason": "; ".join(reason), "version": version,
-            "java_home": java_home, "plugin_dir": str(plugin_dir), "fields": FIELDS,
+            "java_home": java_home, "plugin_dir": str(plugin_dir), "plugin_version": plugin_version(), "fields": FIELDS,
             "example": example}
 
 
@@ -98,8 +116,8 @@ def _groovy_str(s: str) -> str:
 def render_config(form: dict) -> str:
     outdir = form.get("outdir") or "results"
     lines = [
-        "// written by RO-Crate Studio — pass with `nextflow run . -c rocrate-studio.config`",
-        f"plugins {{ id 'nf-fairscape@{PLUGIN_VERSION}' }}",
+        "// written by FAIRSCAPE Studio — pass with `nextflow run . -c rocrate-studio.config`",
+        f"plugins {{ id 'nf-fairscape@{plugin_version()}' }}",
         f"outputDir = {_groovy_str(outdir)}",
         "fairscape {",
         f"    file      = {_groovy_str(outdir.rstrip('/') + '/ro-crate-metadata.json')}",
@@ -167,7 +185,7 @@ def start(form: dict) -> Job:
     if not outdir.is_absolute():
         outdir = pipeline / outdir
     cmd = [shutil.which("nextflow") or "nextflow", "run", ".", "-c", CONFIG_NAME,
-           "-plugins", f"nf-fairscape@{PLUGIN_VERSION}"]
+           "-plugins", f"nf-fairscape@{plugin_version()}"]
     if form.get("resume", True):
         cmd.append("-resume")
     if form.get("extra_args"):

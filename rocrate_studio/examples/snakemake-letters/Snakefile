@@ -1,0 +1,50 @@
+"""A three-step letters chain: the smallest workflow that still has a provenance chain.
+
+Builds a table of the first N letters, reverses it, and splits it into two halves.
+Every step is plain shell (coreutils and awk), so it runs anywhere Snakemake does,
+in a few seconds. Run it with the FAIRSCAPE reporter to get a FAIRSCAPE Data Package:
+
+    snakemake --cores 1 && snakemake --cores 1 --reporter fairscape
+"""
+
+N = 8
+
+
+rule all:
+    input:
+        "results/first_half.csv",
+        "results/second_half.csv",
+
+
+rule make_table:
+    """Write the first N letters as a small table: position, letter."""
+    output:
+        "results/letters.csv",
+    params:
+        n=N,
+    shell:
+        "printf '%s\\n' {{a..z}} | head -n {params.n} "
+        "| awk 'BEGIN {{ print \"position,letter\" }} {{ print NR \",\" $0 }}' > {output}"
+
+
+rule reverse:
+    """Reverse the table, keeping the header on top."""
+    input:
+        "results/letters.csv",
+    output:
+        "results/reversed.csv",
+    shell:
+        "(head -n 1 {input} && tail -n +2 {input} | tac) > {output}"
+
+
+rule split_halves:
+    """Split the reversed table into a first and a second half, each with the header."""
+    input:
+        "results/reversed.csv",
+    output:
+        first="results/first_half.csv",
+        second="results/second_half.csv",
+    shell:
+        "rows=$(( $(wc -l < {input}) - 1 )); half=$(( (rows + 1) / 2 )); "
+        "(head -n 1 {input} && tail -n +2 {input} | head -n $half) > {output.first}; "
+        "(head -n 1 {input} && tail -n +$(( half + 2 )) {input}) > {output.second}"

@@ -101,14 +101,14 @@ def root_of(crate: dict) -> dict | None:
 
 def new_crate(name: str, author: str = "", description: str = "", keywords=None,
               naan: str = "59853", license: str = "https://spdx.org/licenses/CC-BY-4.0") -> dict:
-    name = name.strip() or "Untitled crate"
+    name = name.strip() or "Untitled package"
     rid = mint_ark(naan, "rocrate", name, f"{name}|{_now()}")
     root = {
         "@id": rid,
         "@type": ["Dataset", EVI + "ROCrate"],
         "conformsTo": {"@id": "https://w3id.org/fairscape/profile/0.1"},
         "name": name,
-        "description": description.strip() or f"RO-Crate '{name}' created in RO-Crate Studio.",
+        "description": description.strip() or f"FAIRSCAPE Data Package '{name}' created in FAIRSCAPE Studio.",
         "author": author.strip() or os.environ.get("USER", "unknown"),
         "keywords": keywords or ["ro-crate"],
         "license": license,
@@ -134,7 +134,7 @@ def add_entity(crate: dict, type_: str, name: str, naan: str = "59853") -> str:
     author = (root or {}).get("author", "unknown")
     guid = mint_ark(naan, PREFIX[type_], name, f"{type_}|{name}|{_now()}")
     node = {"@id": guid, "@type": TYPE_IRI[type_], "name": name,
-            "description": f"{type_} '{name}' added in RO-Crate Studio."}
+            "description": f"{type_} '{name}' added in FAIRSCAPE Studio."}
     if type_ == "Computation":
         node.update(runBy=author, dateCreated=_now(), command="")
     elif type_ == "Schema":
@@ -237,7 +237,7 @@ def validate(crate: dict) -> dict:
                 continue
             for ref in _ids(value):
                 if ref.startswith("ark:") and ref not in known:
-                    add(node["@id"], f"{key} points at {ref}, which is not in this crate")
+                    add(node["@id"], f"{key} points at {ref}, which is not in this package")
 
     # 3. root-level advice
     root = root_of(crate)

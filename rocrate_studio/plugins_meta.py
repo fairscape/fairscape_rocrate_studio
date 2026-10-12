@@ -7,6 +7,10 @@ and how to turn the filled-in form into a ``convert(...)`` call.
 
 Field types the frontend understands: string, text, bool, path (file or
 dir), file, dir, select.
+
+A ``sample`` names the folder to copy (``dir``) and gives ``source``,
+``crate_dir``, ``records`` or ``document`` relative to it; ``samples.py``
+copies it into the output folder before the plugin sees it.
 """
 from __future__ import annotations
 
@@ -14,18 +18,19 @@ from pathlib import Path
 
 import fairscape_conversion
 
+from .samples import EXAMPLES
+
 CONVERSION_ROOT = Path(fairscape_conversion.__file__).resolve().parent
 PLUGIN_ROOT = CONVERSION_ROOT / "plugins"
-EXAMPLES = CONVERSION_ROOT / "examples"
 
 DEFAULT_NAAN = "59853"
 DEFAULT_LICENSE = "https://spdx.org/licenses/CC-BY-4.0"
 
 
-def _crate_meta(name_help="Name of the crate"):
+def _crate_meta(name_help="Name of the package"):
     """The metadata block every workflow importer accepts."""
     return [
-        {"name": "name", "label": "Crate name", "type": "string", "help": name_help},
+        {"name": "name", "label": "Package name", "type": "string", "help": name_help},
         {"name": "description", "label": "Description", "type": "text"},
         {"name": "author", "label": "Author", "type": "string"},
         {"name": "keywords", "label": "Keywords", "type": "string", "placeholder": "comma, separated"},
@@ -41,11 +46,11 @@ def _crate_meta(name_help="Name of the crate"):
 #: takes no options — d4d, wrroc — takes part on the same terms.
 LINKED_FIELD = {
     "name": "linked_crates",
-    "label": "Linked crates (inputs that another crate already describes)",
+    "label": "Linked packages (inputs that another package already describes)",
     "type": "dirs",
-    "placeholder": "/path/to/upstream-crate",
-    "help": "Point at crates whose outputs this run consumed — the folder holding their "
-            "ro-crate-metadata.json. Inputs found in one of them reuse that crate's "
+    "placeholder": "/path/to/upstream-package",
+    "help": "Point at packages whose outputs this run consumed — the folder holding their "
+            "ro-crate-metadata.json. Inputs found in one of them reuse that package's "
             "identifiers and link back to it, instead of becoming new entities nothing "
             "produced. Matched by file path, then checksum, then containing folder.",
 }
@@ -60,7 +65,7 @@ PLUGINS = {
         "blurb": "Runs, params, metrics, logged datasets and models from an MLflow tracking store.",
         "import": True, "export": False,
         "source_kind": "path",           # source is a URI / directory, passed straight to convert
-        "sample": {"source": f"sqlite:///{EXAMPLES / 'mlflow' / 'mlflow.db'}",
+        "sample": {"dir": EXAMPLES / "mlflow-iris", "source": "mlflow.db", "crate_dir": ".",
                    "experiment": "iris-classifier", "copy_artifacts": False, "schemas": True,
                    "name": "Iris classifier — MLflow experiment", "author": "Example Researcher",
                    "keywords": "mlflow, iris, random forest"},
@@ -71,9 +76,9 @@ PLUGINS = {
             {"name": "experiment", "label": "Experiment (name or id)", "type": "string", "lookup": "mlflow_experiments",
              "help": "Click Look up to list the experiments in the store. Picked for you if there is only one."},
             {"name": "run_id", "label": "Run id", "type": "string"},
-            {"name": "crate_dir", "label": "Crate folder", "type": "dir",
+            {"name": "crate_dir", "label": "Package folder", "type": "dir",
              "help": "Where copied artifacts land. Required if copying artifacts."},
-            {"name": "copy_artifacts", "label": "Copy run artifacts into the crate", "type": "bool", "default": False},
+            {"name": "copy_artifacts", "label": "Copy run artifacts into the package", "type": "bool", "default": False},
             {"name": "schemas", "label": "Infer schemas for tabular artifacts", "type": "bool", "default": True},
             *_crate_meta(),
         ],
@@ -85,14 +90,14 @@ PLUGINS = {
         "source_kind": "path",
         # a real Cromwell 92 run — bwa/samtools/bcftools scattered over three
         # samples — rather than the toy fixture the plugin tests use
-        "sample": {"source": EXAMPLES / "wdl-variant-calling" / "run" / "metadata.json",
-                   "crate_dir": str(EXAMPLES / "wdl-variant-calling"),
+        "sample": {"dir": EXAMPLES / "cromwell-variant-calling",
+                   "source": "run/metadata.json", "crate_dir": ".",
                    "name": "Variant calling on three sequenced samples (WDL)",
                    "author": "Example Researcher",
                    "keywords": "cromwell, wdl, variant calling, genomics"},
         "options": [
             {"name": "source", "label": "Cromwell metadata.json", "type": "file", "required": True},
-            {"name": "crate_dir", "label": "Crate folder", "type": "dir"},
+            {"name": "crate_dir", "label": "Package folder", "type": "dir"},
             {"name": "schemas", "label": "Infer schemas for tabular outputs", "type": "bool", "default": False},
             *_crate_meta(),
         ],
@@ -103,16 +108,15 @@ PLUGINS = {
                  ".rocrate.zip or unpacked), a bare .ga workflow, or a Galaxy server + invocation id.",
         "import": True, "export": False,
         "source_kind": "path",
-        "sample": {"source": PLUGIN_ROOT / "galaxy" / "input-store",
-                   "crate_dir": PLUGIN_ROOT / "galaxy" / "input-store",
+        "sample": {"dir": EXAMPLES / "galaxy-invocation", "source": ".", "crate_dir": ".",
                    "author": "Example Researcher"},
         "options": [
             {"name": "source", "label": "Invocation export (archive or folder), .ga file, or Galaxy URL", "type": "path", "required": True,
              "placeholder": "/path/to/invocation-export.tar.gz  or  https://usegalaxy.org"},
             {"name": "invocation_id", "label": "Invocation id (Galaxy URL only)", "type": "string"},
             {"name": "api_key", "label": "API key (Galaxy URL only)", "type": "string"},
-            {"name": "crate_dir", "label": "Crate folder", "type": "dir",
-             "help": "File paths in the crate are written relative to this folder."},
+            {"name": "crate_dir", "label": "Package folder", "type": "dir",
+             "help": "File paths in the package are written relative to this folder."},
             *_crate_meta("Defaults to the workflow's name"),
         ],
     },
@@ -124,7 +128,7 @@ PLUGINS = {
         "source_kind": "document",       # source is read and parsed before convert
         # the records a real variant-calling run left behind (12 jobs over six
         # rules); plugins/snakemake/input.json is the toy fixture the tests use
-        "sample": {"records": EXAMPLES / "snakemake-variant-calling" / "run" / "records.json"},
+        "sample": {"dir": EXAMPLES / "snakemake-records", "records": "records.json"},
         "options": [
             {"name": "source", "label": "Snakemake fairscape report (JSON)", "type": "file", "required": True},
         ],
@@ -135,9 +139,8 @@ PLUGINS = {
                  "the records export, becomes a tabular schema of the export's columns.",
         "import": True, "export": False,
         "source_kind": "path",
-        "sample": {"source": PLUGIN_ROOT / "redcap" / "input-dictionary.csv",
-                   "records": PLUGIN_ROOT / "redcap" / "input-records.csv",
-                   "crate_dir": PLUGIN_ROOT / "redcap",
+        "sample": {"dir": PLUGIN_ROOT / "redcap", "source": "input-dictionary.csv",
+                   "records": "input-records.csv", "crate_dir": ".",
                    "name": "Seasonal respiratory illness survey",
                    "author": "Example Public Health Group",
                    "keywords": "redcap, survey, public health, respiratory",
@@ -150,18 +153,18 @@ PLUGINS = {
             {"name": "labels", "label": "Export used labels rather than raw codes", "type": "bool", "default": False},
             {"name": "redcap_version", "label": "REDCap version", "type": "string",
              "help": "Shown under Help & FAQ in REDCap; it is not written into the files."},
-            {"name": "crate_dir", "label": "Crate folder", "type": "dir",
-             "help": "File paths in the crate are written relative to this folder."},
+            {"name": "crate_dir", "label": "Package folder", "type": "dir",
+             "help": "File paths in the package are written relative to this folder."},
             *_crate_meta("Defaults to the project name REDCap put in the file name"),
         ],
     },
     "d4d": {
         "title": "Datasheet for Datasets",
-        "blurb": "A D4D datasheet (YAML or JSON) becomes a crate with one dataset. "
-                 "Export writes the crate's D4D/LinkML datasheet (what fairscape-cli called ro-crate-linkml.yaml).",
+        "blurb": "A D4D datasheet (YAML or JSON) becomes a package with one dataset. "
+                 "Export writes the package's D4D/LinkML datasheet (what fairscape-cli called ro-crate-linkml.yaml).",
         "import": True, "export": True,
         "source_kind": "document",
-        "sample": {"document": PLUGIN_ROOT / "d4d" / "input.yaml"},
+        "sample": {"dir": PLUGIN_ROOT / "d4d", "document": "input.yaml"},
         "options": [
             {"name": "source", "label": "Datasheet file (.yaml / .json)", "type": "file", "required": True},
             {"name": "validate", "label": "Validate result with fairscape_models", "type": "bool", "default": True},
@@ -173,7 +176,7 @@ PLUGINS = {
         "blurb": "A WRROC (CWL, Galaxy, …) ro-crate-metadata.json, re-expressed as EVI provenance.",
         "import": True, "export": True,
         "source_kind": "document",
-        "sample": {"document": PLUGIN_ROOT / "wrroc" / "input.json"},
+        "sample": {"dir": PLUGIN_ROOT / "wrroc", "document": "input.json"},
         "options": [
             {"name": "source", "label": "WRROC ro-crate-metadata.json", "type": "file", "required": True},
             {"name": "naan", "label": "ARK NAAN", "type": "string", "default": DEFAULT_NAAN},
@@ -184,15 +187,14 @@ PLUGINS = {
     "frictionless": {
         "title": "Frictionless Data Package",
         "blurb": "Any datapackage.json: a Dataset per resource and a tabular schema per Table Schema. "
-                 "Export writes a datapackage.json for any crate.",
+                 "Export writes a datapackage.json for any FAIRSCAPE Data Package.",
         "import": True, "export": True,
         "source_kind": "path",
-        "sample": {"source": PLUGIN_ROOT / "frictionless" / "input-datapackage",
-                   "crate_dir": PLUGIN_ROOT / "frictionless" / "input-datapackage"},
+        "sample": {"dir": PLUGIN_ROOT / "frictionless" / "input-datapackage", "source": ".", "crate_dir": "."},
         "options": [
             {"name": "source", "label": "Package folder or datapackage.json", "type": "path", "required": True},
-            {"name": "crate_dir", "label": "Crate folder", "type": "dir",
-             "help": "File paths in the crate are written relative to this folder."},
+            {"name": "crate_dir", "label": "Package folder", "type": "dir",
+             "help": "File paths in the package are written relative to this folder."},
             *_crate_meta("Defaults to the package's title"),
         ],
         "export_ext": ".json",
@@ -202,22 +204,22 @@ PLUGINS = {
         "blurb": "A folder of C2M2 TSVs plus C2M2_datapackage.json.",
         "import": True, "export": False,
         "source_kind": "path",
-        "sample": {"source": PLUGIN_ROOT / "c2m2" / "input-datapackage"},
+        "sample": {"dir": PLUGIN_ROOT / "c2m2" / "input-datapackage", "source": "."},
         "options": [
             {"name": "source", "label": "Datapackage folder", "type": "dir", "required": True},
-            {"name": "output_path", "label": "Crate folder", "type": "dir",
-             "help": "The plugin writes the crate and copies the tables here."},
+            {"name": "output_path", "label": "Package folder", "type": "dir",
+             "help": "The plugin writes the package and copies the tables here."},
             {"name": "author", "label": "Author", "type": "string"},
             {"name": "publisher", "label": "Publisher", "type": "string"},
             {"name": "naan", "label": "ARK NAAN", "type": "string", "default": DEFAULT_NAAN},
         ],
     },
     "cpm": {
-        "title": "Common Provenance Model crate",
+        "title": "Common Provenance Model (CPM)",
         "blurb": "A CPM RO-Crate folder with its PROV bundles.",
         "import": True, "export": True,
         "source_kind": "path",
-        "sample": {"source": PLUGIN_ROOT / "cpm" / "input-crate"},
+        "sample": {"dir": PLUGIN_ROOT / "cpm" / "input-crate", "source": "."},
         "options": [
             {"name": "source", "label": "CPM crate folder", "type": "dir", "required": True},
             {"name": "naan", "label": "ARK NAAN", "type": "string", "default": DEFAULT_NAAN},
@@ -226,7 +228,7 @@ PLUGINS = {
     },
     "croissant": {
         "title": "MLCommons Croissant",
-        "blurb": "Export only: an EVI crate as a Croissant document.",
+        "blurb": "Export only: a FAIRSCAPE Data Package as a Croissant document.",
         "import": False, "export": True,
         "source_kind": "document",
         "options": [],

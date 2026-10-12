@@ -12,25 +12,24 @@ import copy
 import importlib
 import json
 import os
-import shutil
-import tempfile
 import traceback
 from pathlib import Path
 from typing import Any
 
 import yaml
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
-from . import (artifacts_runner, crate_ops, fields_meta, improve_meta, nextflow_runner,
-               snakemake_runner)
+from . import (access, artifacts_runner, crate_ops, examples_meta, fields_meta, improve_meta, nextflow_runner,
+               samples, snakemake_runner)
 from .plugins_meta import PLUGINS, public_list
 
 STATIC = Path(__file__).parent / "static"
-OUT_DIR = Path(os.environ.get("ROCRATE_STUDIO_OUT", Path.home() / "rocrate-studio-out"))
 
-app = FastAPI(title="RO-Crate Studio")
+app = FastAPI(title="FAIRSCAPE Studio")
+# sign-in and per-visitor folders; does nothing unless a deployment turns it on
+app.add_middleware(access.Gate)
 
 
 def _fail(e: Exception, prefix: str = ""):
@@ -55,8 +54,43 @@ def static_file(name: str):
 
 @app.get("/api/info")
 def info():
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    return {"home": str(Path.home()), "suggest_dir": str(OUT_DIR / "my-crate"), "out_dir": str(OUT_DIR)}
+    out = samples.user_out_dir()
+    out.mkdir(parents=True, exist_ok=True)
+    # a multi-user studio starts each visitor's file browser in their own folder
+    home = out if access.multi_user() else Path.home()
+    return {"home": str(home), "suggest_dir": str(out / "my-crate"), "out_dir": str(out)}
+
+
+# ------------------------------------------------------------------ sign-in
+
+@app.get("/api/session")
+def session():
+    return {"signin": access.enabled(), "multi_user": access.multi_user(),
+            "password": bool(access.password()), "user": access.current_user()}
+
+
+class LoginReq(BaseModel):
+    name: str = ""
+    password: str = ""
+
+
+@app.post("/api/login")
+def login(req: LoginReq):
+    if not access.check_password(req.password):
+        raise HTTPException(403, "wrong password")
+    if access.multi_user() and not req.name.strip():
+        raise HTTPException(400, "enter your name or email")
+    user = access.slug(req.name) if req.name.strip() else "guest"
+    resp = JSONResponse({"user": user})
+    resp.set_cookie(access.COOKIE, access.cookie_value(user), httponly=True, samesite="lax")
+    return resp
+
+
+@app.post("/api/logout")
+def logout():
+    resp = JSONResponse({"user": None})
+    resp.delete_cookie(access.COOKIE)
+    return resp
 
 
 @app.get("/api/fs")
@@ -80,7 +114,7 @@ def fs(path: str = "~"):
 # artifacts) or under ai-ready-review/ (the studio's former grading route).
 ARTIFACT_FILES = [
     ("datasheet", "Datasheet", ["ro-crate-datasheet.html"]),
-    ("preview", "Crate preview", ["ro-crate-preview.html"]),
+    ("preview", "Package preview", ["ro-crate-preview.html"]),
     ("graph", "Provenance graph", ["provenance-graph.html", "ro-crate-prov-graph.html"]),
     ("evidence_graph", "Evidence graph", ["ro-crate-evidence-graph.html", "*-evidence-graph.html"]),
     ("review", "AI-readiness review", ["ai-ready-review.html", "ai-ready-review/ai-ready-review.html"]),
@@ -161,7 +195,7 @@ def improve(path: str):
     if d.is_file():
         d = d.parent
     if not (d / "ro-crate-metadata.json").is_file():
-        raise HTTPException(400, f"no ro-crate-metadata.json in {d} — save the crate first")
+        raise HTTPException(400, f"no ro-crate-metadata.json in {d} — save the package first")
     try:
         return improve_meta.improve(d)
     except ImportError as e:
@@ -262,16 +296,15 @@ def convert(req: ConvertReq):
     crate_path = None
     try:
         if req.sample:
-            s = meta["sample"]
-            if "records" in s or "document" in s:
-                source = _read_doc(str(s.get("records") or s.get("document")))
+            # a copy in the output folder, never the installed files themselves
+            sample_opts, work = samples.materialize(req.plugin, meta["sample"])
+            log.append(f"example copied to {work}")
+            if meta["source_kind"] == "document":
+                source = _read_doc(sample_opts.get("records") or sample_opts.get("document"))
                 opts = {k: v for k, v in opts.items() if k in ("validate", "naan")}
-                log.append(f"sample input: {s.get('records') or s.get('document')}")
             else:
-                sample_opts = {k: (str(v) if isinstance(v, Path) else v) for k, v in s.items()}
                 source = sample_opts.pop("source")
                 opts = {**opts, **sample_opts}
-                log.append(f"sample input: {source}")
         else:
             if "source" not in opts:
                 raise ValueError("pick a source first")
@@ -281,10 +314,6 @@ def convert(req: ConvertReq):
 
         # plugin-specific plumbing
         if req.plugin == "c2m2":
-            if req.sample:
-                work = Path(tempfile.mkdtemp(prefix="c2m2-", dir=OUT_DIR))
-                shutil.copytree(source, work / "input-datapackage")
-                source = str(work / "input-datapackage")
             out = opts.pop("output_path", None) or str(Path(source).parent / "c2m2-crate")
             old = os.getcwd(); os.chdir(Path(source).parent)
             try:
@@ -308,7 +337,7 @@ def convert(req: ConvertReq):
                         raise ValueError("this store has several experiments; pick one: "
                                          + ", ".join(e["name"] for e in exps))
             if isinstance(source, str) and not opts.get("crate_dir"):
-                opts["crate_dir"] = str(OUT_DIR / f"{req.plugin}-crate")
+                opts["crate_dir"] = str(samples.user_out_dir() / f"{req.plugin}-crate")
             # schema inference says on stderr when it had to skip a format and
             # what to install; repeat that in the log the user actually reads
             from fairscape_conversion.core import schemas as schema_notes
@@ -316,17 +345,12 @@ def convert(req: ConvertReq):
             crate = mod.convert("import", source, **opts)
             log.extend(schema_notes.NOTES)
             if isinstance(source, str):
-                # a sample is read-only: its crate_dir anchors the relative
-                # contentUrls (so it has to be the example's own folder), but
-                # the crate itself lands in the studio's output folder rather
-                # than overwriting the one checked in beside the example
-                cd = (OUT_DIR / f"{req.plugin}-sample-crate" if req.sample
-                      else Path(opts["crate_dir"]))
+                # crate_dir anchors the relative contentUrls, so the package is
+                # written there (for a sample, that is the example's own copy)
+                cd = Path(opts["crate_dir"])
                 cd.mkdir(parents=True, exist_ok=True)
                 crate_ops.write_crate(crate, cd); crate_path = str(cd.resolve())
                 log.append(f"wrote {crate_path}/ro-crate-metadata.json")
-                if req.sample:
-                    log.append(f"(file paths in it point at {opts['crate_dir']})")
         else:
             crate = mod.convert("import", source, **opts)
     except HTTPException:
@@ -454,7 +478,7 @@ def link(req: LinkReq):
     one on screen stay the same thing.
     """
     if not req.linked:
-        raise HTTPException(400, "pick at least one crate to link to")
+        raise HTTPException(400, "pick at least one package to link to")
     crate = copy.deepcopy(req.crate)
     log: list[str] = []
     try:
@@ -489,9 +513,10 @@ def export(req: ExportReq):
         result = mod.convert("export", copy.deepcopy(req.crate))
     except Exception as e:  # noqa: BLE001
         _fail(e, f"{req.plugin} export failed — ")
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out = samples.user_out_dir()
+    out.mkdir(parents=True, exist_ok=True)
     ext = meta.get("export_ext", ".json")
-    target = OUT_DIR / f"{req.plugin}-export{ext}"
+    target = out / f"{req.plugin}-export{ext}"
     if isinstance(result, str):
         text = result
     elif ext == ".yaml":
@@ -503,6 +528,20 @@ def export(req: ExportReq):
 
 
 # ------------------------------------------------------------------ nextflow
+
+@app.get("/api/examples")
+def examples_info():
+    return examples_meta.info()
+
+
+@app.post("/api/examples/open/{name}")
+def examples_open(name: str):
+    try:
+        crate, path = examples_meta.open_finished(name)
+    except Exception as e:  # noqa: BLE001
+        _fail(e)
+    return {"crate": crate, "crate_path": path}
+
 
 @app.get("/api/nextflow/info")
 def nf_info():
@@ -619,7 +658,7 @@ def _crate_payload(job) -> dict:
                     if report["matches"]:
                         crate_ops.write_crate(crate, folder)
                 except Exception as e:  # noqa: BLE001
-                    log.append(f"linking failed, crate left unlinked — "
+                    log.append(f"linking failed, package left unlinked — "
                                f"{type(e).__name__}: {e}")
                 job.lines.extend(log)
             payload.update(crate=crate, crate_path=str(folder))
@@ -627,7 +666,7 @@ def _crate_payload(job) -> dict:
             payload.update(ok=False, error=f"the run wrote {job.crate_file} but it "
                                             f"could not be read: {type(e).__name__}: {e}")
     elif getattr(job, "stopped", False):
-        payload["error"] = "the run was stopped before it produced a crate"
+        payload["error"] = "the run was stopped before it produced a package"
     return payload
 
 

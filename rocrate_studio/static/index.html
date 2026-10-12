@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RO-Crate Studio</title>
+<title>FAIRSCAPE Studio</title>
 <link rel="icon" type="image/svg+xml" href="/static/studio-icon.svg">
 <style>
 :root{
   --bg:#f6f7f9;--panel:#fff;--ink:#1c2128;--muted:#5f6b7a;--line:#e2e5ea;--accent:#2f6fed;--accent-ink:#fff;--accent-soft:#e8effd;
   --dataset:#3b82f6;--software:#8b5cf6;--computation:#f59e0b;--mlmodel:#ec4899;--schema:#10b981;--root:#374151;--other:#9ca3af;--linked:#115e59;
-  --danger:#dc2626;--ok:#16a34a;--left:380px;--drawer:440px;
+  --danger:#dc2626;--ok:#16a34a;--left:380px;
 }
 *{box-sizing:border-box}
 html{font-size:16px}
@@ -22,7 +22,7 @@ header .badge{max-width:260px;overflow:hidden;text-overflow:ellipsis}
 header select{width:auto!important;max-width:180px;padding:9px 10px}
 header .sub{color:var(--muted);font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 header .spacer{flex:1}
-main{flex:1;display:grid;grid-template-columns:var(--left) 1fr auto;min-height:0}
+main{flex:1;display:grid;grid-template-columns:var(--left) 1fr;min-height:0}
 aside,section{min-height:0}
 aside{background:var(--panel);border-right:1px solid var(--line);padding:18px 20px 40px;overflow-y:auto;overflow-x:hidden}
 #canvas{position:relative;background:radial-gradient(circle,#d5d9e0 1px,transparent 1px) 0 0/22px 22px;min-width:0}
@@ -58,6 +58,70 @@ details.adv label{font-size:.9rem}
 .log{font:.85rem/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-word;max-height:260px;overflow-y:auto;overflow-x:hidden;margin-top:12px}
 .log.ok{background:#052e16;color:#bbf7d0}
 .log.err{background:#450a0a;color:#fecaca}
+/* ---- start screen ---- */
+h2.welcome{font-size:1.3rem;margin:0 0 8px;line-height:1.3}
+#start .lead,#pathPick .lead{color:var(--muted);margin:0 0 12px;font-size:.95rem}
+#start .lead b{color:var(--ink)}
+.card{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:14px;margin-bottom:10px;border:1px solid #cfd5dd;border-radius:10px;background:#fff}
+.card:hover{border-color:var(--accent);background:var(--accent-soft)}
+.card .ic{font-size:1.5rem;line-height:1;flex:none;width:30px;text-align:center}
+.card b{display:block;font-size:1.02rem;margin-bottom:2px}
+.card small{display:block;color:var(--muted);font-size:.88rem;line-height:1.4}
+.card small.eg{margin-top:4px;color:#2748a8}
+.card.off{opacity:.6}
+.grouphead{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin:16px 0 8px}
+.crumbs{display:flex;gap:10px;align-items:center;margin-bottom:12px;font-size:.9rem;color:var(--muted)}
+.crumbs .spacer{flex:1}
+.crumbs button.link{font-size:.9rem;flex:none}
+#guide{margin-top:18px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fafbfc}
+#guide h3{margin:0 0 6px;font-size:1.05rem}
+#guide ol{margin:0;padding-left:0;list-style:none}
+#guide li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid #eef0f3;font-size:.93rem}
+#guide li:first-child{border-top:none}
+#guide li .tick{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid #cfd5dd;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:var(--muted)}
+#guide li.done .tick{background:var(--ok);border-color:var(--ok);color:#fff}
+#guide li.done .what{color:var(--muted);text-decoration:line-through}
+#guide li .what{flex:1}
+#guide li small{display:block;color:var(--muted);font-size:.85rem}
+#guide li button{flex:none}
+/* full screen while answering the questions; the map comes in once a package loads */
+body.wizard main{grid-template-columns:1fr}
+body.wizard #canvas{display:none}
+body.wizard aside{border-right:none;background:var(--bg);padding:36px 24px 60px}
+body.wizard #wizard{max-width:820px;margin:0 auto}
+body.wizard #start,body.wizard #pathPick,body.wizard #flow{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px 32px}
+body.wizard h2.welcome{font-size:1.7rem}
+body.wizard #start .lead,body.wizard #pathPick .lead{font-size:1.02rem}
+body.wizard #startCards,body.wizard #pathCards .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+body.wizard #startCards .card,body.wizard #pathCards .card{margin:0}
+body.wizard #flow{max-width:620px;margin:0 auto}
+p.equation{font-size:1.05rem!important;color:var(--ink)!important;font-weight:600;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin:4px 0 18px!important}
+p.equation span{padding:4px 10px;border-radius:8px;background:var(--accent-soft);color:#1e3a8a}
+p.equation span:last-child{background:var(--root);color:#fff}
+p.tryex{margin:14px 0 0;font-size:.95rem;color:var(--muted);text-align:center}
+p.tryex a{color:var(--accent);font-weight:600}
+body.wizard #examplesPick{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px 32px}
+.excard{border:1px solid #cfd5dd;border-radius:10px;padding:14px 16px;margin-bottom:12px;background:#fff}
+.excard h3{margin:0 0 2px;font-size:1.05rem;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.excard h3 .tag{font-size:.75rem;font-weight:700;color:#2748a8;background:var(--accent-soft);border-radius:99px;padding:1px 8px}
+.excard p{margin:4px 0;color:var(--muted);font-size:.92rem}
+.excard .acts{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;margin-top:10px;align-items:center}
+.excard .acts button{justify-self:start;white-space:nowrap}
+.excard .acts .hint{margin:0}
+.excard .acts .why{color:var(--danger)}
+p.standard{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+p.standard a{color:var(--accent)}
+/* ---- the sidebar once loaded ---- */
+.lcard{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fafbfc}
+.lcard .kicker{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+.lcard h2{margin:4px 0 10px;font-size:1.2rem;line-height:1.3;word-break:break-word}
+.lcard dl{margin:0 0 12px;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:.88rem}
+.lcard dt{color:var(--muted)}
+.lcard dd{margin:0;word-break:break-all}
+.lcard dd.none{color:var(--danger);word-break:normal}
+#logBox{margin-top:12px;font-size:.9rem}
+#logBox summary{cursor:pointer;color:var(--muted);font-weight:600}
+#logBox[hidden]{display:none}
 /* ---- canvas ---- */
 .toolbar{position:absolute;top:12px;left:14px;right:14px;display:flex;gap:8px;align-items:center;z-index:2}
 .toolbar .status{font-size:.9rem;color:var(--muted);background:rgba(255,255,255,.95);padding:8px 12px;border-radius:8px;border:1px solid var(--line);max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -79,18 +143,63 @@ details.adv label{font-size:.9rem}
 .empty[hidden]{display:none}
 .empty div{max-width:460px}
 .empty b{color:var(--ink)}
-/* ---- drawer ---- */
-#drawer{display:flex;min-height:0;width:0;transition:width .15s ease}
-#drawer.open{width:var(--drawer)}
-#drawer.max{width:min(60vw,1100px)}
-.handle{width:8px;cursor:col-resize;background:linear-gradient(to right,transparent 2px,#cfd5dd 2px,#cfd5dd 4px,transparent 4px);flex:none}
-.handle:hover{background:linear-gradient(to right,transparent 1px,var(--accent) 1px,var(--accent) 5px,transparent 5px)}
-#editor{flex:1;min-width:0;background:var(--panel);border-left:1px solid var(--line);padding:16px 20px;overflow:auto}
-#editor .head{display:flex;gap:6px;align-items:center;margin-bottom:4px}
-#editor .head .badge{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-#editor .head button.small{flex:none;padding:5px 8px}
-#editor .head .spacer{flex:1}
-#editor h3{margin:8px 0 2px;font-size:1.25rem;word-break:break-word}
+/* ---- sidebar panels: overview, a box's details, Improve ---- */
+body.wide{--left:min(500px,42vw)}
+#editor h3,.ptitle{margin:4px 0 2px;font-size:1.25rem;word-break:break-word}
+#editor .crumbs .badge{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sect{margin-top:16px;border-top:1px solid var(--line);padding-top:10px}
+.sect h4,.sect>summary{margin:0 0 8px;font-size:1rem;font-weight:700}
+details.sect>summary{cursor:pointer;color:var(--ink)}
+.connect{display:grid;grid-template-columns:1fr;gap:6px;margin-top:10px;font-size:.9rem}
+.connect select{padding:7px 8px;font-size:.9rem;font-weight:500}
+.connect button{justify-self:start;padding:6px 14px;font-size:.9rem}
+.refline{display:flex;gap:6px;align-items:baseline;font-size:.93rem;padding:3px 0}
+.refline .rel{color:var(--muted);flex:none}
+.refline a{color:var(--accent);word-break:break-word}
+.refline button{padding:0 6px;font-size:.8rem;margin-left:auto;flex:none}
+.nudge{display:flex;gap:10px;align-items:center;margin:8px 0;padding:10px 12px;border-radius:8px;background:var(--accent-soft);font-size:.92rem;color:#1e3a8a}
+.nudge span{flex:1}
+.nudge button{flex:none}
+/* Improve */
+.scorebox{display:flex;gap:14px;align-items:center;margin:8px 0 10px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fafbfc}
+.scorebox .big{font-size:1.8rem;font-weight:800;line-height:1}
+.scorebox .big small{font-size:1rem;color:var(--muted);font-weight:600}
+.scorebox .bar{flex:1;height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden}
+.scorebox .bar i{display:block;height:100%;background:var(--ok)}
+.impHead{position:sticky;top:-18px;z-index:2;background:var(--panel);margin:-18px -20px 8px;padding:14px 20px 8px;border-bottom:1px solid var(--line)}
+.impHead .crumbs{margin-bottom:4px}
+.isect{margin-top:10px}
+.isect,#isect-jobs{scroll-margin-top:210px}
+.isect>summary{display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+.isect>summary .cnt{font-size:.8rem;text-transform:none;letter-spacing:0;background:#fff;border:1px solid var(--line);border-radius:99px;padding:0 8px}
+#impNav{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+#impNav button{padding:4px 10px;font-size:.85rem;border-radius:99px}
+#impNav button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+#impNav button small{opacity:.75;margin-left:4px}
+.swfield{margin-bottom:12px}
+.swfield label{margin:6px 0 2px}
+.swfield .hint{margin:0 0 6px}
+#impProgress{display:flex;gap:10px;align-items:center;margin:0 0 10px;padding:10px 12px;border-radius:8px;background:#ecfdf5;border:1px solid #bbf7d0;font-size:.92rem}
+#impProgress[hidden]{display:none}
+#impProgress span{flex:1}
+.qcard{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#fff}
+.qcard>.qhead{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;cursor:pointer}
+.qcard>.qhead .t{flex:1;min-width:0}
+.qcard>.qhead b{display:block;font-size:.97rem}
+.qcard>.qhead small{display:block;color:var(--muted);font-size:.85rem;line-height:1.35}
+.qcard>.qhead .chev{flex:none;color:var(--muted)}
+.qcard.open{border-color:var(--accent);box-shadow:0 0 0 3px #e8effd}
+.qcard .qbody{padding:0 12px 12px}
+.qcard .qbody .help{font-size:.88rem;color:var(--ink);margin:0 0 8px}
+.qcard .qbody .why{font-size:.82rem;color:#2748a8;margin:6px 0 0}
+.qcard .qbody .acts{display:flex;gap:8px;margin-top:10px}
+.qcard .chips{display:flex;flex-wrap:wrap;gap:6px}
+.qcard .chips label{display:inline-flex;gap:5px;align-items:center;margin:0;font-weight:400;font-size:.88rem;border:1px solid #cfd5dd;border-radius:99px;padding:3px 10px;cursor:pointer}
+.qcard .chips label:has(input:checked){background:var(--accent-soft);border-color:var(--accent)}
+.qcard.justdone{border-color:#bbf7d0;background:#f0fdf4}
+.win{display:inline-block;font-size:.72rem;font-weight:700;color:#065f46;background:#d1fae5;border-radius:99px;padding:0 7px;margin-left:6px;vertical-align:1px}
+.effhead{display:flex;align-items:center;gap:8px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin:16px 0 8px}
+.effhead .cnt{font-size:.8rem;text-transform:none;letter-spacing:0;background:#fff;border:1px solid var(--line);border-radius:99px;padding:0 8px}
 .badge{font-size:.85rem;padding:3px 10px;border-radius:99px;background:var(--accent-soft);color:#2748a8;font-weight:600}
 .idline{font-size:.85rem;color:var(--muted);word-break:break-all;margin-bottom:14px}
 .kv{display:grid;grid-template-columns:minmax(110px,32%) 1fr auto;gap:8px;align-items:start;margin-bottom:10px}
@@ -103,9 +212,7 @@ details.adv label{font-size:.9rem}
 .problem{font-size:.95rem;color:var(--danger);margin:6px 0;padding:8px 10px;background:#fff1f1;border-radius:6px}
 .note{font-size:.95rem;color:#134e4a;margin:6px 0;padding:8px 10px;background:#ecfdf5;border-left:3px solid var(--linked);border-radius:6px}
 details.more{margin:14px 0 0;border-top:1px solid var(--line);padding-top:10px}
-#aiready{margin-top:18px;border-top:2px solid var(--line);padding-top:12px}
-#aiready h4{margin:0 0 4px;font-size:1.1rem}
-#aiready .lead{color:var(--muted);font-size:.9rem;margin:0 0 10px}
+#aiready .lead{color:var(--muted);font-size:.9rem;margin:0 0 10px;font-weight:400}
 .grp{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:#fafbfc}
 .grp summary{padding:10px 12px;cursor:pointer;display:flex;gap:10px;align-items:center;font-weight:600}
 .grp summary .cnt{margin-left:auto;font-size:.85rem;font-weight:600;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:99px;padding:1px 9px}
@@ -122,15 +229,13 @@ details.more{margin:14px 0 0;border-top:1px solid var(--line);padding-top:10px}
 .frow .have{flex:none;color:var(--ok);font-weight:600;font-size:.9rem;padding-top:4px}
 .frow.req b::after{content:' *';color:var(--danger)}
 details.more summary{cursor:pointer;color:var(--muted);font-weight:600}
-/* ---- drawer view toggle + Improve ---- */
+/* ---- AI-ready groups + bigger jobs ---- */
 .seg{display:inline-flex;flex:none;border:1px solid #cfd5dd;border-radius:8px;overflow:hidden}
 .seg button{border:none;border-radius:0;padding:5px 9px;font-size:.9rem;background:#fff;color:var(--muted);white-space:nowrap}
 .seg button+button{border-left:1px solid #cfd5dd}
 .seg button.on{background:var(--accent);color:#fff;font-weight:600}
-#improve{margin-top:18px;border-top:2px solid var(--line);padding-top:12px}
-#improve h4{margin:0 0 4px;font-size:1.1rem}
-#improve .lead{color:var(--muted);font-size:.9rem;margin:0 0 10px}
-#improve .lead b{color:var(--ink)}
+#improvePanel .lead{color:var(--muted);font-size:.9rem;margin:0 0 10px}
+#improvePanel .lead b{color:var(--ink)}
 .frow .t small.lift{color:#2748a8}
 .frow .t small.lift .short{font-weight:600}
 .frow.done .t b{color:var(--muted)}
@@ -154,23 +259,78 @@ details.more summary{cursor:pointer;color:var(--muted);font-weight:600}
 .browser li:hover{background:var(--accent-soft)}
 .browser li.dir{font-weight:600}
 .browser li.pick{background:#fff7e6}
+/* ---- shared (deployed) studio: sign-in and the warning strip ---- */
+#demoBanner{background:#fff7e6;border-bottom:1px solid #f0d9a8;color:#6b4a00;padding:8px 18px;font-size:.92rem;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#demoBanner .spacer{flex:1}
+#signin .box{width:420px;max-width:calc(100vw - 32px);display:flex;flex-direction:column;gap:12px}
+#signin[hidden],#demoBanner[hidden],#signin label[hidden]{display:none}
+#signin label{display:flex;flex-direction:column;gap:4px;font-weight:600}
+#signin .box h2{margin:0}
+#signin .box input{width:100%;padding:8px 10px;font:inherit;border:1px solid var(--line);border-radius:8px}
+#signin .err{color:var(--danger);min-height:1.2em;margin:0}
 </style>
 </head>
 <body>
 <header>
-  <h1><img src="/static/studio-logo-a-inline.svg" alt="FAIRSCAPE Studio" title="RO-Crate Studio"></h1>
+  <h1><img src="/static/studio-logo-a-inline.svg" alt="FAIRSCAPE Studio" title="FAIRSCAPE Studio"></h1>
   <span class="spacer"></span>
-  <span id="crateTitle" class="badge" hidden title="Click to edit the crate's own title, author, description…" style="cursor:pointer"></span>
+  <span id="crateTitle" class="badge" hidden title="Click to edit the package's own title, author, description…" style="cursor:pointer"></span>
   <!-- <button id="btnValidate" disabled>Check for problems</button> -->
   <select id="exportPlugin" disabled style="font-weight:600"><option value="">Export as…</option></select>
-  <button id="btnSave" class="primary" disabled>Save crate</button>
+  <button id="btnSave" class="primary" disabled>Save package</button>
 </header>
+<div id="demoBanner" hidden>
+  <span><b>Shared demo.</b> Everyone here uses the same machine: other people can see and overwrite what you save, and everything is wiped when the demo restarts. Don't upload anything sensitive.</span>
+  <span class="spacer"></span>
+  <span id="demoUser"></span>
+  <button class="link" id="btnSignOut">Sign out</button>
+</div>
+<div id="signin" class="browser" hidden>
+  <form class="box" autocomplete="on">
+    <h2>FAIRSCAPE Studio demo</h2>
+    <p class="hint">This is a shared demo of FAIRSCAPE Studio. Your work is kept in a folder under your name until the demo restarts.</p>
+    <label id="signinNameRow">Your name or email<input id="signinName" name="username" autocomplete="username"></label>
+    <label id="signinPassRow">Demo password<input id="signinPass" type="password" name="password" autocomplete="current-password"></label>
+    <p class="err" id="signinErr"></p>
+    <button class="primary" type="submit">Start</button>
+  </form>
+</div>
 <main>
   <aside id="left">
+    <!-- the questions: full screen until a package is loaded -->
+    <div id="wizard">
+    <!-- level 0: where are you starting from -->
+    <div id="start">
+      <h2 class="welcome">Build a FAIRSCAPE Data Package</h2>
+      <p class="lead">A data package bundles your files with metadata describing what they are, who made them, and how they were made — so other people (and AI tools) can find, trust and reuse them.</p>
+      <p class="lead equation"><span>Data</span> + <span>Metadata</span> = <span>FAIRSCAPE Data Package</span></p>
+      <p class="lead"><b>Where are you starting from?</b></p>
+      <div id="startCards"></div>
+      <p class="tryex">Just starting? <a href="#" id="lnkExamples">Try an example</a> — open a finished package or run a small workflow to see how it works.</p>
+      <p class="hint standard">Under the hood a FAIRSCAPE Data Package is an <a href="https://www.researchobject.org/ro-crate/" target="_blank" rel="noopener">RO-Crate</a> — the open standard for packaging research data with its metadata — so any RO-Crate tool can read it.</p>
+    </div>
+
+    <!-- level 1: which one, within that path -->
+    <div id="pathPick" hidden>
+      <div class="crumbs"><button class="link" data-reset="start">← Back</button></div>
+      <h2 class="welcome" id="pathTitle"></h2>
+      <p class="lead" id="pathLead"></p>
+      <div id="pathCards"></div>
+    </div>
+
+    <!-- examples: worked examples to open or run -->
+    <div id="examplesPick" hidden>
+      <div class="crumbs"><button class="link" data-reset="start">← Back</button></div>
+      <h2 class="welcome">Try an example</h2>
+      <p class="lead">Each one ends with a real FAIRSCAPE Data Package on the map, so you can click around, edit it and see how it scores. Nothing here touches your own files.</p>
+      <div id="exampleCards"></div>
+    </div>
+
+    <!-- level 2: the form, set up for the choice -->
+    <div id="flow" hidden>
+    <div class="crumbs"><span id="crumbPath"></span><span class="spacer"></span><button class="link" id="btnChange">Change</button><button class="link" id="btnStartOver">Start over</button></div>
     <div class="step" id="step1">
-      <h2><span class="n">1</span>What do you have?</h2>
-      <p class="lead">Pick the thing you want to describe. We'll turn it into an RO-Crate.</p>
-      <select id="kind"></select>
+      <h2><span class="n">1</span><span id="kindTitle"></span></h2>
       <p class="hint" id="kindBlurb"></p>
     </div>
 
@@ -193,23 +353,82 @@ details.more summary{cursor:pointer;color:var(--muted);font-weight:600}
       </form>
     </div>
 
-    <button id="btnGo" class="primary big">Build crate</button>
-    <button id="btnStop" class="danger big" hidden>Stop the run</button>
-    <div id="runLog" class="log" hidden></div>
+    <button id="btnGo" class="primary big">Build package</button>
+    <div id="logHomeWizard"><button id="btnStop" class="danger big" hidden>Stop the run</button><div id="runLog" class="log" hidden></div></div>
+    </div>
+    </div>
+
+    <!-- once a package is loaded: what it is, where it came from, and what to do next -->
+    <div id="loaded" hidden>
+      <div class="lcard">
+        <div class="kicker" id="ldHow"></div>
+        <h2 id="ldName"></h2>
+        <dl>
+          <dt>From</dt><dd id="ldSource"></dd>
+          <dt>Saved at</dt><dd id="ldSaved"></dd>
+        </dl>
+        <div class="row"><button id="btnLdEdit" class="small">Edit details</button><button id="btnLdReset" class="small">Start over</button></div>
+      </div>
+      <details id="logBox"><summary id="logBoxSum">Log</summary><div id="logHomeLoaded"></div></details>
+      <div id="guide" hidden>
+        <h3>What to do next</h3>
+        <ol id="guideList"></ol>
+      </div>
+    </div>
+
+    <!-- a box's details, in the sidebar; the map stays in view -->
+    <section id="editor" hidden>
+      <div class="impHead">
+        <div class="crumbs"><button class="link" id="btnEdBack">← Back</button><span class="spacer"></span><span id="edType" class="badge"></span></div>
+        <h3 id="edName"></h3>
+      </div>
+      <div class="idline" id="edId"></div>
+      <div id="edLinked"></div>
+      <div id="edProblems"></div>
+      <div id="edNudge"></div>
+      <div class="sect"><h4>About this box</h4><div id="edFields"></div><div id="edOther"></div></div>
+      <div class="sect" id="edConn"><h4>Connections</h4><p class="hint" id="edConnNone"></p><div id="edRefs"></div>
+        <div class="connect"><span class="hint">This box</span><select id="linkProp"><option value="usedDataset">used the data</option><option value="usedSoftware">used the software</option><option value="usedMLModel">used the model</option><option value="generatedBy">was made by</option><option value="generated">produced</option></select><select id="linkTarget"></select><button id="btnLink">Connect</button></div>
+      </div>
+      <details class="sect more" id="aiready"><summary>Add another detail</summary>
+        <p class="lead" id="aireadyLead"></p>
+        <div id="aireadyGroups"></div>
+        <details class="more"><summary>Add a property that is not listed</summary>
+          <div class="row" style="margin-top:8px"><input type="text" id="newKey" placeholder="property name, e.g. rai:dataBiases"><button id="btnAddKey">Add</button></div>
+        </details>
+      </details>
+      <details class="more"><summary>Delete this box</summary>
+        <button id="btnDelete" class="danger" style="margin-top:8px">Delete this box and its links</button>
+      </details>
+    </section>
+
+    <!-- Improve: only what is missing, one question at a time -->
+    <section id="improvePanel" hidden>
+      <div class="impHead">
+        <div class="crumbs"><button class="link" id="btnImpBack">← Back</button></div>
+        <h3 class="ptitle">Improve the AI-readiness score</h3>
+        <div id="impProgress" hidden></div>
+        <div id="impNav"></div>
+      </div>
+      <div id="impScore"></div>
+      <p class="lead" id="improveLead"></p>
+      <div id="impLog"></div>
+      <div id="improveBody"></div>
+    </section>
   </aside>
 
   <section id="canvas">
     <div class="toolbar">
       <span class="status" id="status">Nothing loaded yet</span>
       <span class="spacer"></span>
-      <select id="artifacts" class="status" hidden title="Pages and files that sit next to the saved crate, and the fairscape-artifacts build that makes them (datasheet, previews, evidence graph, AI-readiness review)"><option value="">Artifacts ▾</option></select>
-      <button id="btnRoot" class="small primary" hidden>✎ Edit crate details</button>
+      <select id="artifacts" class="status" hidden title="Pages and files that sit next to the saved package, and the fairscape-artifacts build that makes them (datasheet, previews, evidence graph, AI-readiness review)"><option value="">Artifacts ▾</option></select>
+      <button id="btnRoot" class="small primary" hidden>✎ Edit package details</button>
       <button id="btnAdd" class="small">+ Add entity</button>
-      <button id="btnLinkCrate" class="small" hidden title="Reuse another crate's identifiers for inputs it produced, so the two crates form one provenance chain">⇄ Link inputs…</button>
+      <button id="btnLinkCrate" class="small" hidden title="Reuse another package's identifiers for inputs it produced, so the two packages form one provenance chain">⇄ Link inputs…</button>
       <button id="btnFit" class="small">Fit</button>
       <button id="btnJson" class="small">JSON</button>
     </div>
-    <div class="empty" id="empty"><div><b>Start on the left.</b><br>Choose what you have, point at it, and click <b>Build crate</b>.<br><br>Your crate will appear here as a map: each box is a piece of the crate, arrows show what was used to make what. Click any box to read or fix its details. The dark box is the crate itself: its title, author and description live there.</div></div>
+    <div class="empty" id="empty"><div><b>Start on the left.</b><br>Tell us what you are starting from and we will walk you through the rest.<br><br>Your data package will appear here as a map: each box is a piece of it — data, software, a step that was run — and arrows show what was used to make what. Click any box to read or fix its details. The dark box is the package itself: its title, author and description live there.</div></div>
     <svg id="svg"><defs><marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs><g id="view"></g></svg>
     <div class="legend">
       <span><i style="background:var(--dataset)"></i>Data</span>
@@ -217,56 +436,21 @@ details.more summary{cursor:pointer;color:var(--muted);font-weight:600}
       <span><i style="background:var(--computation)"></i>Computation</span>
       <span><i style="background:var(--mlmodel)"></i>Model</span>
       <span><i style="background:var(--schema)"></i>Schema</span>
-      <span><i style="background:var(--root)"></i>The crate itself</span>
-      <span><i style="background:var(--linked)"></i>Another crate &amp; what came from it</span>
+      <span><i style="background:var(--root)"></i>The package itself</span>
+      <span><i style="background:var(--linked)"></i>Another package &amp; what came from it</span>
     </div>
   </section>
 
-  <div id="drawer">
-    <div class="handle" id="handle" title="drag to resize"></div>
-    <section id="editor">
-      <div class="head">
-        <span id="edType" class="badge"></span>
-        <span class="seg" id="viewSeg" title="All properties: every field FAIRSCAPE knows, grouped. Improve: what to fill in next, ranked by the last AI-readiness build"><button data-view="all" class="on">All fields</button><button data-view="improve">Improve</button></span>
-        <span class="spacer"></span>
-        <button id="btnMax" class="small" title="expand / shrink">⤢</button>
-        <button id="btnClose" class="small" title="close">✕</button>
-      </div>
-      <h3 id="edName"></h3>
-      <div class="idline" id="edId"></div>
-      <div id="edLinked"></div>
-      <div id="edProblems"></div>
-      <div id="edFields"></div>
-      <div id="aiready">
-        <h4>AI-Ready details</h4>
-        <p class="lead" id="aireadyLead">Everything FAIRSCAPE knows how to describe, in plain groups. Click <b>Add</b> to fill one in; it appears above.</p>
-        <div id="aireadyGroups"></div>
-        <details class="more"><summary>Add a property that is not listed</summary>
-          <div class="row" style="margin-top:8px"><input type="text" id="newKey" placeholder="property name, e.g. rai:dataBiases"><button id="btnAddKey">Add</button></div>
-        </details>
-      </div>
-      <div id="improve" hidden>
-        <h4>Improve the AI-readiness score</h4>
-        <p class="lead" id="improveLead"></p>
-        <div id="improveBody"></div>
-      </div>
-      <details class="more"><summary>Connect to another box</summary>
-        <div class="row" style="margin-top:8px"><select id="linkProp"><option value="usedDataset">used this data</option><option value="usedSoftware">used this software</option><option value="usedMLModel">used this model</option><option value="generatedBy">was made by</option><option value="generated">produced</option></select><select id="linkTarget"></select><button id="btnLink">Connect</button></div>
-      </details>
-      <details class="more"><summary>Danger zone</summary>
-        <button id="btnDelete" class="danger" style="margin-top:8px">Delete this box and its links</button>
-      </details>
-    </section>
-  </div>
 </main>
 
 <script>
 // ---------- state ----------
-const S = { plugins: [], kind: null, crate: null, cratePath: null, selected: null, layout: null, problems: {}, nf: null, smk: null, art: null, built: false, estimate: null, improve: null, view: 'all' };
+const S = { plugins: [], kind: null, crate: null, cratePath: null, selected: null, layout: null, problems: {}, nf: null, smk: null, art: null, built: false, estimate: null, improve: null, impSec: 'e1', panel: null, back: 'overview', savedPath: null, answered: 0, justDone: new Set(), skipped: new Set(), openQ: null };
 const $ = s => document.querySelector(s);
 const api = async (path, opts={}) => {
   const r = await fetch(path, {headers:{'Content-Type':'application/json'}, ...opts});
   const j = await r.json().catch(()=>({}));
+  if (r.status===401 && j.signin) { signIn().then(()=>location.reload()); }
   if (!r.ok) throw new Error(j.detail || j.error || r.statusText);
   return j;
 };
@@ -307,38 +491,222 @@ const refIds = v => [].concat(v||[]).map(x => typeof x==='string' ? x : (x && x[
 const byId = id => S.crate['@graph'].find(n => n['@id']===id);
 const rootNode = () => S.crate && S.crate['@graph'].find(isRoot);
 
-// ---------- step 1: kinds ----------
-// second group of the dropdown: the studio runs the workflow itself, streams the log, and loads the crate when it ends
+// ---------- the start: where are you starting from → which one → the form ----------
+// workflows the studio runs itself: it streams the log and loads the package when the run ends
 const RUN_KINDS = [
-  {id:'nf', title:'A Nextflow pipeline', blurb:'We run your pipeline with the nf-fairscape plugin; the log streams in below and the crate loads when it finishes.', where:'Point at the folder that holds your main.nf.', go:'Run pipeline and build crate', stop:'/api/nextflow/stop/'},
-  {id:'smk', title:'A Snakemake workflow', blurb:'We run your workflow, then run the FAIRSCAPE reporter over the finished DAG; both logs stream in below and the crate loads at the end.', where:'Point at the folder that holds your Snakefile.', go:'Run workflow and build crate', stop:'/api/snakemake/stop/'},
+  {id:'nf', title:'A Nextflow pipeline', blurb:'We run your pipeline with the nf-fairscape plugin; the log streams in below and the package loads when it finishes.', where:'Point at the folder that holds your main.nf.', go:'Run pipeline and build package', stop:'/api/nextflow/stop/'},
+  {id:'smk', title:'A Snakemake workflow', blurb:'We run your workflow, then run the FAIRSCAPE reporter over the finished DAG; both logs stream in below and the package loads at the end.', where:'Point at the folder that holds your Snakefile.', go:'Run workflow and build package', stop:'/api/snakemake/stop/'},
 ];
-// first group: things that already exist on disk (conversion plugins get inserted in front)
+// things that already exist on disk (conversion plugins get inserted in front)
 const KINDS = [
-  {id:'open', title:'An RO-Crate I already have', blurb:'Open an existing ro-crate-metadata.json to look at it or fix it.', where:'Pick the crate folder or its ro-crate-metadata.json.', go:'Open crate'},
-  {id:'new', title:'Nothing yet — start from scratch', blurb:'Make an empty crate and add data, software and computations by hand.', where:'', go:'Create empty crate'},
+  {id:'open', title:'Open a data package', blurb:'Open a FAIRSCAPE Data Package — or any RO-Crate — to look at it, fix it or score it.', where:'Pick the package folder or its ro-crate-metadata.json.', go:'Open package'},
+  {id:'new', title:'Start an empty package', blurb:'Start with an empty package, then add your data, the software you used and the steps that connect them. The checklist below walks you through it.', where:'', go:'Create empty package'},
 ];
+// the first screen: three ways in. A plugin no path names lands in the `rest` group,
+// so a new conversion plugin still shows up without touching this list.
+const PATHS = {
+  workflow: {icon:'⚙', title:'I ran a workflow or analysis',
+    blurb:'A pipeline, workflow system or ML experiment turned inputs into results. We read the record it left (or run it for you) and capture every step.',
+    eg:'Nextflow · Snakemake · WDL / Cromwell · Galaxy · MLflow',
+    lead:'Which tool did you use? If you have not run it yet, the first two run it here and record everything as it goes.',
+    groups:[{title:'Run it here and record it', ids:['nf','smk']},
+            {title:'Already ran it — import the record it left', ids:['plugin:cromwell','plugin:galaxy','plugin:snakemake','plugin:mlflow','plugin:wrroc']}]},
+  metadata: {icon:'📄', title:'I have metadata in another format',
+    blurb:'A data dictionary, datasheet or data package someone already filled in. We translate it, so you do not retype anything.',
+    eg:'Frictionless · Datasheets for Datasets · REDCap · CFDE C2M2 · CPM',
+    lead:'Which format is your metadata in?',
+    groups:[{title:'Formats we can read', ids:['plugin:frictionless','plugin:d4d','plugin:redcap','plugin:c2m2','plugin:cpm'], rest:true}]},
+  manual: {icon:'✎', title:'I want to describe it by hand',
+    blurb:'Nothing to import. Start empty and add your data, the software you used and the steps that connect them — with a checklist to follow.',
+    eg:'Good for small projects, bench work or notebook analyses', direct:'new'},
+  existing: {icon:'📂', title:'I already have a data package',
+    blurb:'Open one made earlier — here, with fairscape-cli or by another RO-Crate tool — to look at it, fix it or score it.',
+    eg:'Point at its folder or its ro-crate-metadata.json', direct:'open'},
+};
+// "pick this if…" in plain words, shown on each choice card
+const WHEN = {
+  'nf':'You have a Nextflow pipeline (a folder with main.nf) and want to run it now.',
+  'smk':'You have a Snakemake workflow (a folder with a Snakefile) and want to run it now.',
+  'plugin:cromwell':'You ran a WDL workflow on Cromwell or Terra and have its metadata.json.',
+  'plugin:galaxy':'You ran a workflow on a Galaxy server and exported the invocation.',
+  'plugin:snakemake':'You already ran Snakemake with --reporter fairscape and have the records file.',
+  'plugin:mlflow':'You track machine-learning runs with MLflow.',
+  'plugin:wrroc':'You have a Workflow Run RO-Crate from CWL, Galaxy or another WRROC tool.',
+  'plugin:frictionless':'You have a datapackage.json (Frictionless Data).',
+  'plugin:d4d':'You filled in a Datasheet for Datasets (YAML or JSON).',
+  'plugin:redcap':'Your data comes from a REDCap project.',
+  'plugin:c2m2':'You have a CFDE C2M2 submission (TSV tables plus C2M2_datapackage.json).',
+  'plugin:cpm':'You have a Common Provenance Model package with PROV bundles.',
+};
+const kindById = id => (S.kinds||[]).find(k=>k.id===id);
+const isReady = k => k.id==='nf' ? !!(S.nf&&S.nf.available) : k.id==='smk' ? !!(S.smk&&S.smk.available) : true;
+function card(icon, title, text, eg, onclick, off){
+  const b=document.createElement('button'); b.type='button'; b.className='card'+(off?' off':'');
+  b.innerHTML=`<span class="ic">${icon||'›'}</span><span><b></b><small></small>${eg?'<small class="eg"></small>':''}</span>`;
+  b.querySelector('b').textContent=title; b.querySelector('small').textContent=text;
+  if(eg) b.querySelector('small.eg').textContent=eg;
+  b.onclick=onclick; return b;
+}
+function showLevel(n){ $('#start').hidden=n!==0; $('#pathPick').hidden=n!==1; $('#flow').hidden=n!==2; $('#examplesPick').hidden=n!==3; $('#left').scrollTop=0; }
+function renderStart(){
+  const box=$('#startCards'); box.innerHTML='';
+  Object.entries(PATHS).forEach(([key,p])=>box.appendChild(card(p.icon, p.title, p.blurb, p.eg, ()=>openPath(key))));
+}
+function pathGroups(p){
+  const named=new Set(Object.values(PATHS).flatMap(q=>(q.groups||[]).flatMap(g=>g.ids)).concat(KINDS.map(k=>k.id)));
+  return p.groups.map(g=>({title:g.title, kinds:[...g.ids.map(kindById),
+    ...(g.rest ? S.kinds.filter(k=>k.plugin && !named.has(k.id)) : [])].filter(Boolean)}));
+}
+function openPath(key){
+  const p=PATHS[key]; S.path=key;
+  if(p.direct){ pickKind(kindById(p.direct)); return; }
+  $('#pathTitle').textContent=p.title; $('#pathLead').textContent=p.lead;
+  const box=$('#pathCards'); box.innerHTML='';
+  pathGroups(p).forEach(g=>{
+    if(!g.kinds.length) return;
+    const h=document.createElement('div'); h.className='grouphead'; h.textContent=g.title; box.appendChild(h);
+    const cards=document.createElement('div'); cards.className='cards'; box.appendChild(cards);
+    g.kinds.forEach(k=>{ const ready=isReady(k);
+      cards.appendChild(card('', k.title, WHEN[k.id]||k.blurb, ready?'':'Not set up on this machine yet — pick it to see what is missing', ()=>pickKind(k), !ready)); });
+  });
+  showLevel(1);
+}
+function pickKind(k){
+  selectKind(k);
+  const p=S.path&&PATHS[S.path];
+  $('#crumbPath').textContent = p ? (p.direct ? p.title : p.title+' › '+k.title) : S.path==='examples' ? 'Examples › '+k.title : k.title;
+  showLevel(2);
+}
+// "Change" goes back one level; "Start over" goes to the first screen and clears the map
+$('#btnChange').onclick=()=>{ const p=S.path&&PATHS[S.path]; if(S.path==='examples') openExamples(); else if(p && !p.direct) openPath(S.path); else showLevel(0); };
+// ---------- examples: worked examples to open or run, one page off the start screen ----------
+// Each example either opens a finished package, imports a bundled sample, or runs a
+// bundled workflow; live runs go through the ordinary form so people see how it is filled in.
+async function openExamples(){
+  S.path='examples'; showLevel(3);
+  const box=$('#exampleCards'); box.innerHTML='<p class="hint">Checking what this machine can run…</p>';
+  let ex={}; try{ ex=await api('/api/examples'); }catch(e){}
+  const cm=ex.cellmaps||{available:false, reason:'could not check'};
+  box.innerHTML='';
+  const plug=name=>kindById('plugin:'+name);
+  const list=[
+    {title:'Cell Maps for AI (CM4AI)', tag:'Nextflow · real research pipeline',
+     text:'Builds a hierarchical map of the cell from Human Protein Atlas images and protein–protein interaction data: two downloads, two embeddings, a fusion and a hierarchy — six steps with the stock Cell Maps tools.',
+     acts:[
+       {label:'Open the finished package', primary:true, note:'Instant. The package from a full run of the pipeline, with 123 pieces to explore.', go:openFinished('cellmaps','Example: Cell Maps for AI (finished run)')},
+       {label:'Run it live', ok:cm.available, why:'Not set up on this machine: '+cm.reason,
+        note:'Takes about an hour the first time: it downloads about 1 GB of images and builds a conda environment for each step. You will see the form filled in first.',
+        go:()=>runExample('nf', {pipeline:cm.pipeline, checksums:true, schemas:true, extra_args:'-c fairscape-annotations.config'}, false, 'Cell Maps for AI')}]},
+    {title:'Datasheet for Datasets: AI-READI', tag:'Metadata in another format', ok:!!plug('d4d'),
+     text:'The D4D datasheet of AI-READI, a multimodal diabetes dataset from 4,000 people, translated into a data package — no data files, all description.',
+     acts:[{label:'Import it', primary:true, note:'A few seconds.', go:()=>importExample('d4d')}]},
+    {title:'Variant calling with WDL', tag:'Workflow you already ran · Cromwell',
+     text:'A real Cromwell run that aligned three sequenced samples and called variants (bwa, samtools, bcftools). We read the record it left behind.',
+     acts:[{label:'Import it', primary:true, note:'A few seconds.', go:()=>importExample('cromwell')}]},
+    {title:'A small Snakemake workflow', tag:'Snakemake · run live',
+     text:'Three tiny steps that write and combine CSV files. Watch the run, then see the package it produced.',
+     acts:[{label:'Run it', primary:true, ok:!!(S.smk&&S.smk.available&&S.smk.example), why:'Not set up on this machine: '+((S.smk&&S.smk.reason)||'Snakemake not found'),
+            note:'About a second.', go:()=>runExample('smk', {workflow:S.smk&&S.smk.example}, true, 'A small Snakemake workflow')}]},
+    {title:'A small Nextflow pipeline', tag:'Nextflow · run live',
+     text:'Three steps passing letters along a chain, slow enough to watch each one start and finish.',
+     acts:[{label:'Run it', primary:true, ok:!!(S.nf&&S.nf.available&&S.nf.example), why:'Not set up on this machine: '+((S.nf&&S.nf.reason)||'Nextflow not found'),
+            note:'About 15 seconds.', go:()=>runExample('nf', {pipeline:S.nf&&S.nf.example}, true, 'A small Nextflow pipeline')}]},
+    {title:'An MLflow experiment', tag:'Machine learning · MLflow',
+     text:'An iris-classifier experiment: its runs, parameters, metrics, the dataset it used and the model it logged.',
+     acts:[{label:'Import it', primary:true, note:'A few seconds.', go:()=>importExample('mlflow')}]},
+  ];
+  list.forEach(x=>{
+    const c=document.createElement('div'); c.className='excard';
+    c.innerHTML='<h3><span></span><span class="tag"></span></h3><p></p><div class="acts"></div>';
+    c.querySelector('h3 span').textContent=x.title; c.querySelector('.tag').textContent=x.tag; c.querySelector('p').textContent=x.text;
+    const acts=c.querySelector('.acts');
+    x.acts.forEach(a=>{ const ok=a.ok!==false;
+      const b=document.createElement('button'); b.className='small'+(a.primary?' primary':''); b.textContent=a.label; b.disabled=!ok; b.onclick=a.go; acts.appendChild(b);
+      const n=document.createElement('p'); n.className='hint'+(ok?'':' why'); n.textContent=ok?a.note:a.why; acts.appendChild(n); });
+    box.appendChild(c);
+  });
+}
+$('#lnkExamples').onclick=e=>{ e.preventDefault(); openExamples(); };
+function openFinished(name, how){
+  return async()=>{ try{ const r=await post('/api/examples/open/'+name,{}); S.kind=kindById('open'); S.how=how; S.source='a bundled example'; setCrate(r.crate, r.crate_path); }
+    catch(e){ alert('Could not open the example: '+e.message); } };
+}
+function importExample(plugin){
+  const k=kindById('plugin:'+plugin); if(!k){ alert('That importer is not available.'); return; }
+  pickKind(k); go(true);
+}
+// fill the run form; quick examples start straight away, a long one waits for the person to press Run
+function runExample(kind, values, start, title){
+  pickKind(kindById(kind));
+  if(title) $('#crumbPath').textContent='Examples › '+title;
+  $('#sampleRow').innerHTML='';   // the "no pipeline handy?" link would swap the example out
+  for(const [name,v] of Object.entries(values)){
+    const el=document.querySelector(`#mainForm [name="${name}"], #advForm [name="${name}"]`); if(!el||v==null) continue;
+    if(el.dataset.type==='bool') el.checked=!!v; else el.value=v;
+  }
+  if(start) go(false);
+  else { $('#advBox').open=true; const n=document.createElement('p'); n.className='note'; n.textContent='Everything is filled in for you. Check it over, then press the button below to start.'; $('#sampleRow').prepend(n); }
+}
+$('#btnStartOver').onclick=startOver;
+document.querySelectorAll('[data-reset=start]').forEach(b=>b.onclick=()=>showLevel(0));
+function startOver(){
+  if(!$('#btnStop').hidden){ alert('A run is still going. Stop it first (the red button on the left), then start over.'); return; }
+  if(S.crate && !confirm('Start over?\n\nThis clears the package from the map. '+(S.cratePath
+      ? 'It is saved at '+S.cratePath+', so you can open it again later.'
+      : 'It has NOT been saved — your work on it will be lost.'))) return;
+  clearCrate();
+  $('#metaForm').reset(); $('#runLog').hidden=true; $('#runLog').textContent='';
+  S.path=null; S.kind=null; showLevel(0);
+}
+$('#btnLdReset').onclick=startOver; $('#btnLdEdit').onclick=()=>editRoot();
+// wizard: the questions fill the screen. loaded: the map, with a short sidebar about the package.
+// The run log and its stop button move with the mode, so later jobs (an artifacts build) log in the sidebar.
+function setMode(m){
+  document.body.classList.toggle('wizard', m==='wizard');
+  $('#wizard').hidden = m!=='wizard';
+  if(m==='wizard'){ ['#loaded','#editor','#improvePanel'].forEach(x=>$(x).hidden=true); document.body.classList.remove('wide'); S.panel=null; }
+  else setPanel('overview');
+  logHere();
+  if(m!=='wizard'){ $('#logBox').open=false; $('#logBox').hidden=!$('#runLog').textContent; }
+}
+// put the run log (and its stop button) where the person is looking
+function logHere(){
+  const home = document.body.classList.contains('wizard') ? $('#logHomeWizard') : S.panel==='improve' ? $('#impLog') : $('#logHomeLoaded');
+  home.append($('#btnStop'), $('#runLog'));
+}
+function renderLoaded(){
+  if(!S.crate) return; const r=rootNode()||{};
+  $('#ldHow').textContent=S.how||'Data package';
+  $('#ldName').textContent=r.name||'Untitled package';
+  $('#ldSource').textContent=S.source||'—';
+  const same = !!S.source && S.source.replace(/\/(ro-crate-metadata\.json)?$/,'')===(S.cratePath||'').replace(/\/$/,'');
+  $('#ldSource').hidden=same; $('#ldSource').previousElementSibling.hidden=same;
+  const sv=$('#ldSaved'); sv.textContent=S.cratePath || (S.savedPath ? S.savedPath+' — with unsaved changes' : 'not saved yet'); sv.className=S.cratePath?'':'none';
+}
+function clearCrate(){
+  S.crate=null; S.cratePath=null; S.selected=null; S.layout=null; S.problems={}; S.improve=null; S.built=false; S.estimate=null;
+  closeDrawer(); $('#view').innerHTML=''; vb=null; $('#empty').hidden=false;
+  ['#btnRoot','#btnLinkCrate','#crateTitle','#artifacts'].forEach(s=>$(s).hidden=true);
+  $('#btnSave').disabled=true; $('#exportPlugin').disabled=true;
+  $('#status').textContent='Nothing loaded yet'; $('#status').title='';
+  renderGuide(); setMode('wizard');
+}
 function buildKinds(){
-  const plug = S.plugins.filter(p=>p.import).map(p=>({id:'plugin:'+p.name, title:p.title, blurb:p.blurb, where:'', go:'Build crate', plugin:p}));
-  const importKinds=[...plug, ...KINDS], all=[...importKinds, ...RUN_KINDS];
-  const sel=$('#kind'); sel.innerHTML='';
-  const group=(label,kinds)=>{ const g=document.createElement('optgroup'); g.label=label;
-    kinds.forEach(k=>{const o=document.createElement('option'); o.value=k.id; const ready=k.id==='nf'?S.nf&&S.nf.available:k.id==='smk'?S.smk&&S.smk.available:true; o.textContent=k.title+(ready?'':' (not set up yet)'); g.appendChild(o);}); sel.appendChild(g); };
-  group('Import a run you already have', importKinds);
-  group('Run a workflow live', RUN_KINDS);
-  sel.onchange=()=>selectKind(all.find(k=>k.id===sel.value));
-  S.kinds=all;
+  const plug = S.plugins.filter(p=>p.import).map(p=>({id:'plugin:'+p.name, title:p.title, blurb:p.blurb, where:'', go:'Build package', plugin:p}));
+  S.kinds=[...plug, ...KINDS, ...RUN_KINDS];
   const ex=$('#exportPlugin');
   S.plugins.filter(p=>p.export).forEach(p=>{const o=document.createElement('option');o.value=p.name;o.textContent=p.title;ex.appendChild(o);});
+  renderStart(); showLevel(0); setMode('wizard');
   const demo=new URLSearchParams(location.search).get('demo');
-  const start = demo && all.find(k=>k.id==='plugin:'+demo) || all[0];
-  sel.value=start.id; selectKind(start);
-  if(demo) go(true);
+  const start = demo && kindById('plugin:'+demo);
+  if(start){ S.path=Object.keys(PATHS).find(key=>(PATHS[key].groups||[]).some(g=>g.ids.includes(start.id)))||null; pickKind(start); go(true); }
 }
 function selectKind(k){
-  S.kind=k; $('#kindBlurb').textContent=k.blurb;
+  S.kind=k; $('#kindTitle').textContent=k.title; $('#kindBlurb').textContent=k.blurb;
   const main=$('#mainForm'), adv=$('#advForm'); main.innerHTML=''; adv.innerHTML=''; $('#sampleRow').innerHTML='';
-  $('#step2').classList.toggle('dim', k.id==='new'); $('#advBox').hidden=false;
+  // by hand there is nothing to point at; opening a package keeps its own description
+  $('#step2').hidden = k.id==='new'; $('#step3').hidden = k.id==='open';
+  $('#step3 .n').textContent = k.id==='new' ? '2' : '3'; $('#advBox').hidden=false;
   let mainFields=[], advFields=[];
   if (k.plugin){
     k.plugin.options.forEach(f=>{
@@ -347,11 +715,11 @@ function selectKind(k){
     });
     const src=k.plugin.options.find(f=>f.name==='source');
     $('#whereLead').textContent = 'Point at the file or folder. Use Browse… if you are not sure of the path.';
-    if (k.plugin.sample){ const b=document.createElement('button'); b.className='link'; b.textContent='No file handy? Try the built-in sample'; b.onclick=()=>go(true); $('#sampleRow').appendChild(b); }
+    if (k.plugin.sample){ const b=document.createElement('button'); b.className='link'; b.textContent='Not sure yet? Try it with our example first'; b.onclick=()=>go(true); $('#sampleRow').appendChild(b); }
   } else if (k.id==='nf'){
     $('#whereLead').textContent=k.where;
     (S.nf?S.nf.fields:[]).forEach(f=>{ if(META.includes(f.name)) return; if(f.name==='pipeline') mainFields.push(f); else advFields.push(f); });
-    if (S.nf && S.nf.example){ const b=document.createElement('button'); b.className='link'; b.textContent='No pipeline handy? Use the slow letters-chain example (three steps, ~12 s each)'; b.onclick=()=>{ main.querySelector('[name=pipeline]').value=S.nf.example; }; $('#sampleRow').appendChild(b); }
+    if (S.nf && S.nf.example){ const b=document.createElement('button'); b.className='link'; b.textContent='No pipeline handy? Use the small letters-chain example (three quick steps)'; b.onclick=()=>{ main.querySelector('[name=pipeline]').value=S.nf.example; }; $('#sampleRow').appendChild(b); }
     if (S.nf && !S.nf.available){ const h=document.createElement('p'); h.className='hint'; h.style.color='var(--danger)'; h.textContent='Nextflow is not ready on this machine: '+S.nf.reason; $('#sampleRow').appendChild(h); }
   } else if (k.id==='smk'){
     $('#whereLead').textContent=k.where;
@@ -374,7 +742,6 @@ function selectKind(k){
   renderForm(main, mainFields, true); renderForm(adv, advFields, false);
   $('#advBox').hidden = $('#advBox').hidden || advFields.length===0;
   $('#btnGo').textContent=k.go;
-  $('#step3').classList.remove('dim');
 }
 function renderForm(form, fields, main){
   fields.forEach(f=>{
@@ -394,7 +761,7 @@ function renderForm(form, fields, main){
         x.onclick=()=>{ r.remove(); if(!inp.querySelector('.fileinput')) inp.insertBefore(row(), more); };
         r.append(t,b,x); return r; };
       const more=document.createElement('button'); more.type='button'; more.className='link';
-      more.textContent='+ another crate'; more.onclick=()=>inp.insertBefore(row(), more);
+      more.textContent='+ another package'; more.onclick=()=>inp.insertBefore(row(), more);
       inp.append(row(), more);
     }
     else if (['path','dir','file'].includes(f.type)){
@@ -465,14 +832,17 @@ async function go(useSample){
   const k=S.kind; const log=$('#runLog'); const btn=$('#btnGo');
   const show=(cls,text)=>{ log.hidden=false; log.className='log '+cls; log.textContent=text; log.scrollIntoView({block:'nearest'}); };
   btn.disabled=true;
+  S.how = k.id==='new' ? 'Described by hand' : k.id==='open' ? 'Opened from disk' : (k.plugin?'Imported from ':'Recorded from ')+k.title;
+  const where=formValues($('#mainForm'));
+  S.source = useSample ? 'the built-in example' : k.id==='new' ? 'started empty' : (where.source||where.pipeline||where.workflow||where.path||'');
   try{
     if (k.plugin){
-      show('', 'Working on it…'); $('#status').textContent='Building crate from '+k.plugin.title+'…';
+      show('', 'Working on it…'); $('#status').textContent='Building the package from '+k.plugin.title+'…';
       const opts={...formValues($('#mainForm')), ...formValues($('#advForm'))};
       const meta=formValues($('#metaForm')); for (const f of k.plugin.options) if (META.includes(f.name) && meta[f.name]) opts[f.name]=meta[f.name];
       const r = await post('/api/convert', {plugin:k.plugin.name, options:opts, sample:!!useSample});
       await applyMeta(r.crate, r.crate_path); setCrate(r.crate, r.crate_path);
-      show('ok', (r.log||'done') + '\n\nYour crate is on the right. Click any box to check it, then Save.');
+      show('ok', r.log||'done');
     } else if (k.id==='nf'){
       const form={...formValues($('#mainForm')), ...formValues($('#advForm')), ...formValues($('#metaForm'))};
       if(!form.pipeline) throw new Error('Point at the pipeline folder first.');
@@ -487,12 +857,12 @@ async function go(useSample){
       const r=await post('/api/snakemake/run',form);
       await streamJob('/api/snakemake/log/'+r.job, 'Snakemake', k.stop+r.job);
     } else if (k.id==='open'){
-      const p=formValues($('#mainForm')).path; if(!p) throw new Error('Pick the crate folder first.');
+      const p=formValues($('#mainForm')).path; if(!p) throw new Error('Pick the package folder first.');
       const r=await post('/api/open',{path:p}); setCrate(r.crate,r.crate_path); show('ok','Opened '+r.crate_path);
     } else {
       const m=formValues($('#metaForm'));
       const r=await post('/api/new',{name:m.name||'',author:m.author||'',description:m.description||''}); await applyMeta(r.crate,null); setCrate(r.crate,null);
-      show('ok','Empty crate created. Use "+ Add entity" above the map to add data, software and computations.');
+      show('ok','Empty package created.');
     }
   }catch(e){ if(!log.className.includes('err')){ show('err', e.message); } $('#status').textContent='✗ '+e.message.split('\n')[0].slice(0,140); }
   btn.disabled=false;
@@ -500,13 +870,13 @@ async function go(useSample){
 // one line of a run log -> what the status bar should say, or null if it says nothing new
 function progressOf(line, what, st){
   let m;
-  if (line.startsWith('$ ')) { st.tasks=0; st.phase = /--reporter/.test(line) ? 'building the crate from the finished run' : /pip install/.test(line) ? 'installing' : 'running'; return `${what}: ${st.phase}…`; }
+  if (line.startsWith('$ ')) { st.tasks=0; st.phase = /--reporter/.test(line) ? 'building the package from the finished run' : /pip install/.test(line) ? 'installing' : 'running'; return `${what}: ${st.phase}…`; }
   if ((m=line.match(/^(\d+) of (\d+) steps \((\d+)%\) done/))) return `${what}: ${m[1]} of ${m[2]} steps done (${m[3]}%)`;
   if ((m=line.match(/^\[PROCESS [0-9a-f]{2}\/[0-9a-f]+\] (.+)$/)) || (m=line.match(/^\[[0-9a-f]{2}\/[0-9a-f]+\] Submitted process > (.+)$/))) { st.tasks++; return `${what}: ${st.tasks} task${st.tasks===1?'':'s'} started, latest ${m[1]}`; }
   if ((m=line.match(/^(?:localrule|rule|checkpoint) (\w+):/))) return `${what}: running ${m[1]}…`;
-  if (/^\[SUCCESS\]|^Completed at:|^Report created/.test(line)) return `${what}: finishing, writing the crate…`;
+  if (/^\[SUCCESS\]|^Completed at:|^Report created/.test(line)) return `${what}: finishing, writing the package…`;
   // fairscape-artifacts all: what it is doing, from the lines it prints
-  if (/^loading crate:|^root graph:/.test(line)) return `${what}: reading the crate, building the evidence graph…`;
+  if (/^loading crate:|^root graph:/.test(line)) return `${what}: reading the package, building the evidence graph…`;
   if ((m=line.match(/^criterion (\S+) (.+)$/))) return `${what}: review — criterion ${m[1]} ${m[2]}…`;
   if (/^wrote .*evidence-graph\.json$/.test(line)) return `${what}: evidence graph done, rendering the datasheet and previews…`;
   if (/^wrote .*ro-crate-preview\.html$/.test(line)) return `${what}: previews done, running the AI-readiness review…`;
@@ -523,9 +893,9 @@ function streamJob(url, what='the run', stopUrl=null){
     const end=()=>{ es.close(); stop.hidden=true; };
     es.onmessage=ev=>{ const m=JSON.parse(ev.data);
       if(m.line){ log.textContent+='\n'+m.line; log.scrollTop=log.scrollHeight; const p=progressOf(m.line, what, st); if(p) $('#status').textContent=p; }
-      if(m.done){ end(); if(m.crate){ log.className='log ok'; log.textContent+='\n\nDone — your crate is on the right. Click any box to check it, then Save.'; log.scrollTop=log.scrollHeight; applyMeta(m.crate,m.crate_path).then(()=>{ setCrate(m.crate,m.crate_path); resolve(m); }); }
+      if(m.done){ end(); if(m.crate){ log.className='log ok'; log.textContent+='\n\nDone.'; log.scrollTop=log.scrollHeight; applyMeta(m.crate,m.crate_path).then(()=>{ setCrate(m.crate,m.crate_path); resolve(m); }); }
         else if(m.ok){ log.className='log ok'; log.scrollTop=log.scrollHeight; resolve(m); }   // a job that ends without a crate: an install, an artifacts build
-        else { log.className='log err'; if(m.error) log.textContent+='\n'+m.error; $('#status').textContent='✗ '+(m.error||'the run did not produce a crate'); reject(new Error(m.error||'run failed — see log')); } } };
+        else { log.className='log err'; if(m.error) log.textContent+='\n'+m.error; $('#status').textContent='✗ '+(m.error||'the run did not produce a package'); reject(new Error(m.error||'run failed — see log')); } } };
     es.onerror=()=>{ end(); reject(new Error('lost connection to the run')); }; });
 }
 async function installReporter(btn){
@@ -534,7 +904,7 @@ async function installReporter(btn){
     const r=await post('/api/snakemake/install',{});
     await streamJob('/api/snakemake/log/'+r.job, 'pip').catch(()=>{});
     S.smk=await api('/api/snakemake/info');
-    buildKinds(); $('#kind').value='smk'; selectKind(S.kinds.find(k=>k.id==='smk'));
+    selectKind(kindById('smk'));
     log.className=S.smk.available?'log ok':'log err';
   }catch(e){ log.className='log err'; log.textContent+='\n'+e.message; }
   btn.disabled=false;
@@ -543,10 +913,12 @@ $('#btnGo').onclick=()=>go(false);
 
 // ---------- crate / graph ----------
 function setCrate(crate, path){
-  S.crate=crate; S.cratePath=path||null; S.selected=null; S.problems={}; S.improve=null; S.built=false; S.estimate=null;
+  S.crate=crate; S.cratePath=path||null; S.savedPath=path||null; S.selected=null; S.problems={}; S.improve=null; S.built=false; S.estimate=null;
+  S.answered=0; S.justDone=new Set(); S.skipped=new Set(); S.openQ=undefined; S.impTouched=false; S.impSec='e1'; S.back='overview'; S.prevScore=null;
+  setMode('loaded');
   $('#empty').hidden=true; $('#btnRoot').hidden=false; $('#btnLinkCrate').hidden=false; /* $('#btnValidate').disabled=false; */ $('#btnSave').disabled=false; $('#exportPlugin').disabled=false;
   const root = rootNode();
-  const t=$('#crateTitle'); t.hidden=false; t.textContent=(root&&root.name)||'untitled crate';
+  const t=$('#crateTitle'); t.hidden=false; t.textContent=(root&&root.name)||'untitled package';
   vb=null; draw(true); closeDrawer(); updateStatus(); artifactLinks();
 }
 // the Artifacts dropdown: every page/file found next to the saved crate opens in a
@@ -558,7 +930,7 @@ async function artifactLinks(){
   const add=(v,t)=>{ const o=document.createElement('option'); o.value=v; o.textContent=t; sel.appendChild(o); };
   let r={items:[],built:false,estimate:null};
   if (S.cratePath){ try{ r=await api('/api/artifacts?path='+encodeURIComponent(S.cratePath)); }catch(e){} }
-  S.built=r.built; S.estimate=r.estimate;
+  S.built=r.built; S.estimate=r.estimate; renderGuide();
   r.items.forEach(i=>add('open:'+i.path, i.label+' ↗'));
   if (!S.art || !S.art.installed) add('install', 'Build all artifacts (install fairscape-artifacts first)…');
   else add('build', r.built ? 'Rebuild all artifacts & re-score…' : 'Build all artifacts…');
@@ -573,11 +945,11 @@ $('#artifacts').onchange=()=>{ const sel=$('#artifacts'), v=sel.value; sel.value
 // entity nothing made and becomes that crate's entity, with a pointer back.
 function linkDialog(){
   if(!S.crate) return;
-  if(!S.cratePath){ alert('Save the crate first.\n\nLinking writes where each input actually is and where the other crate sits relative to this one, so it needs to know where this crate lives.'); return; }
+  if(!S.cratePath){ alert('Save the package first.\n\nLinking writes where each input actually is and where the other package sits relative to this one, so it needs to know where this package lives.'); return; }
   const ov=document.createElement('div'); ov.className='browser';
   ov.innerHTML=`<div class="box" style="min-height:0">
-    <h3 style="margin:0">Link inputs to another crate</h3>
-    <p class="hint" style="margin:0">Point at crates whose outputs this run used — the folder holding each one's <code>ro-crate-metadata.json</code>. An input found in one of them reuses that crate's identifier and links back to it; anything not found is left alone.</p>
+    <h3 style="margin:0">Link inputs to another package</h3>
+    <p class="hint" style="margin:0">Point at packages whose outputs this run used — the folder holding each one's <code>ro-crate-metadata.json</code>. An input found in one of them reuses that package's identifier and links back to it; anything not found is left alone.</p>
     <div id="lkRows"></div>
     <div id="lkLog" class="log" hidden></div>
     <div class="row"><button id="lkGo" class="primary">Link</button><button id="lkCancel">Cancel</button></div>
@@ -585,16 +957,16 @@ function linkDialog(){
   document.body.appendChild(ov);
   const rows=ov.querySelector('#lkRows');
   const row=(val='')=>{ const r=document.createElement('div'); r.className='fileinput'; r.style.marginBottom='6px';
-    const t=document.createElement('input'); t.type='text'; t.placeholder='/path/to/upstream-crate'; t.value=val;
+    const t=document.createElement('input'); t.type='text'; t.placeholder='/path/to/upstream-package'; t.value=val;
     const b=document.createElement('button'); b.type='button'; b.textContent='Browse…'; b.onclick=()=>browse(t,'dir');
     r.append(t,b); return r; };
   rows.appendChild(row());
-  const more=document.createElement('button'); more.className='link'; more.textContent='+ another crate';
+  const more=document.createElement('button'); more.className='link'; more.textContent='+ another package';
   more.onclick=()=>rows.insertBefore(row(), more); rows.appendChild(more);
   ov.querySelector('#lkCancel').onclick=()=>ov.remove();
   ov.querySelector('#lkGo').onclick=async()=>{
     const linked=[...rows.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);
-    if(!linked.length){ alert('Pick at least one crate.'); return; }
+    if(!linked.length){ alert('Pick at least one package.'); return; }
     const log=ov.querySelector('#lkLog'), go=ov.querySelector('#lkGo');
     go.disabled=true; log.hidden=false; log.className='log'; log.textContent='Looking…';
     try{
@@ -612,8 +984,8 @@ function confirmBuild(){
     const ov=document.createElement('div'); ov.className='browser dlg';
     const what = S.built ? 'Rebuild all artifacts & re-score' : 'Build all artifacts';
     ov.innerHTML=`<div class="box"><b>${what}</b>
-      <p>Runs <code>fairscape-artifacts all</code> on the saved crate: the evidence graph, a crate preview, the datasheet and the AI-readiness review with its improvements form land next to <code>ro-crate-metadata.json</code>.</p>
-      <p class="hint">${S.built ? 'Existing pages are overwritten — including a ro-crate-datasheet.html a workflow plugin may have written. ' : ''}Only files are added; the crate itself is not changed.</p>
+      <p>Runs <code>fairscape-artifacts all</code> on the saved package: the evidence graph, a crate preview, the datasheet and the AI-readiness review with its improvements form land next to <code>ro-crate-metadata.json</code>.</p>
+      <p class="hint">${S.built ? 'Existing pages are overwritten — including a ro-crate-datasheet.html a workflow plugin may have written. ' : ''}Only files are added; the package itself is not changed.</p>
       <label><input type="checkbox" id="bNet"><span>Also check identifiers and URLs online <span class="hint">(better evidence for the FAIRness and repository criteria; slower, needs a connection)</span></span></label>
       <div class="row"><button id="bGo" class="primary">${what}</button><button id="bNo">Cancel</button></div></div>`;
     document.body.appendChild(ov);
@@ -625,10 +997,12 @@ function estimateLine(est, prev){
   const head = prev && prev.total!==est.total ? `AI-readiness estimate ${prev.total} → ${est.total} of ${est.max}` : `AI-readiness estimate ${est.total}/${est.max}`;
   return head+'  —  '+est.sections.map(x=>`${x.title} ${x.score}/${x.max}`).join(' · ');
 }
-async function buildArtifacts(){
-  if(!S.cratePath){ alert('Save the crate first — the build reads the crate folder on disk, so unsaved edits would not count.'); return; }
-  const choice=await confirmBuild(); if(!choice) return;
+async function buildArtifacts(opts={}){
+  if(!S.cratePath){ alert('Save the package first — the build reads the package folder on disk, so unsaved edits would not count.'); return false; }
+  const choice=await confirmBuild(); if(!choice) return false;
+  logHere(); let ok=false;
   const st=$('#status'), prev=st.textContent, sel=$('#artifacts'); sel.disabled=true;
+  if(S.panel!=='improve'){ $('#logBox').hidden=false; $('#logBox').open=true; }
   const log=$('#runLog'); log.hidden=false; log.className='log'; log.textContent='Building artifacts for '+S.cratePath+(choice.network?' (with online checks)':'')+'…';
   st.textContent='Artifacts: starting…';
   try{
@@ -639,14 +1013,16 @@ async function buildArtifacts(){
       st.textContent=estimateLine(m.estimate, m.previous)+'  —  open the review page under Artifacts to score it properly';
       st.title='Mechanical estimate only: the rubric rules applied to the evidence the grader found. The review page has the evidence and lets you (or a model) set the real scores.';
     } else { st.textContent='Artifacts built (no AI-readiness review: the grader is not installed in the studio\'s environment)'; }
-    const open=(m.written||{}).datasheet||(m.written||{}).review; if(open) window.open('/api/file?path='+encodeURIComponent(open),'_blank');
-    log.textContent+='\n\nDone — the pages are under Artifacts ▾ above the map.'; log.scrollTop=log.scrollHeight;
+    const open=(m.written||{}).datasheet||(m.written||{}).review; if(open && !opts.quiet) window.open('/api/file?path='+encodeURIComponent(open),'_blank');
+    log.textContent+='\n\nDone — the pages are under Artifacts ▾ above the map.'; log.scrollTop=log.scrollHeight; ok=true;
+    if(S.panel==='improve') log.hidden=true;
   }catch(e){ st.textContent='✗ '+e.message.split('\n')[0].slice(0,140); if(!log.className.includes('err')){ log.className='log err'; log.textContent+='\n'+e.message; } }
-  sel.disabled=false;
+  sel.disabled=false; return ok;
 }
 async function installArtifacts(){
   if(!confirm('fairscape-artifacts is not installed in the studio\'s environment. Install it now?\n\n'+(S.art?S.art.install_command:'pip install fairscape-artifacts'))) return;
   const sel=$('#artifacts'); sel.disabled=true;
+  if(S.crate){ $('#logBox').hidden=false; $('#logBox').open=true; }
   const log=$('#runLog'); log.hidden=false; log.className='log'; log.textContent='installing fairscape-artifacts…';
   try{
     const r=await post('/api/artifacts/install',{});
@@ -661,9 +1037,10 @@ function updateStatus(){
   const g=S.crate['@graph']; const counts={};
   g.forEach(n=>{const k=kindOf(n); if(k!=='descriptor'&&k!=='root') counts[k]=(counts[k]||0)+1;});
   const nice={dataset:'data',software:'software',computation:'computations',mlmodel:'models',schema:'schemas',other:'other'};
-  const name=(k,v)=>k==='linked' ? (v===1?'linked crate':'linked crates') : (nice[k]||k);
+  const name=(k,v)=>k==='linked' ? (v===1?'linked package':'linked packages') : (nice[k]||k);
   $('#status').textContent = Object.entries(counts).map(([k,v])=>`${v} ${name(k,v)}`).join(' · ') + (S.cratePath?'  —  saved at '+S.cratePath:'  —  not saved yet');
-  $('#status').title = S.cratePath ? (S.built ? 'Saved. Artifacts ▾ › Rebuild all artifacts & re-score grades the saved crate again.' : 'Saved. Artifacts ▾ › Build all artifacts… makes the datasheet, evidence graph and AI-readiness review.') : 'Unsaved edits: the artifacts build and the Improve ranking read the crate folder on disk, so save first.';
+  $('#status').title = S.cratePath ? (S.built ? 'Saved. Artifacts ▾ › Rebuild all artifacts & re-score grades the saved package again.' : 'Saved. Artifacts ▾ › Build all artifacts… makes the datasheet, evidence graph and AI-readiness review.') : 'Unsaved edits: the artifacts build and the Improve ranking read the package folder on disk, so save first.';
+  renderGuide(); renderLoaded();
 }
 function buildLayout(){
   const g=S.crate['@graph'].filter(n=>kindOf(n)!=='descriptor');
@@ -703,16 +1080,16 @@ function draw(refit){
     view.appendChild(p);
     const t=el('text',{x:mx,y:(y1+y2)/2-4,class:'edgelabel','text-anchor':'middle'}); t.textContent=e.prop; view.appendChild(t);
   });
-  const nice={dataset:'Data',software:'Software',computation:'Computation',mlmodel:'Model',schema:'Schema',root:'The crate',other:''};
+  const nice={dataset:'Data',software:'Software',computation:'Computation',mlmodel:'Model',schema:'Schema',root:'The package',other:''};
   const ptr=pointerIds();
   nodes.forEach(n=>{
     const p=pos[n['@id']]; const k=kindOf(n); const from=stubOf(n, ptr);
     const g=el('g',{class:'node'+(S.selected===n['@id']?' selected':''),transform:`translate(${p.x},${p.y})`});
     g.appendChild(el('rect',{width:p.w,height:p.h,fill:color(k)}));
-    let type = k==='linked' ? (isConstituent(n)?'Crate in this release':'Linked crate') : (nice[k]||typesOf(n).join(', '));
+    let type = k==='linked' ? (isConstituent(n)?'Package in this release':'Linked package') : (nice[k]||typesOf(n).join(', '));
     // the box is 200px wide and SVG text does not wrap, so name the crate a
     // stub came from only as far as it fits; the tooltip has it in full
-    if (from) type = clip(type+' · from '+(from.name||'another crate'), 30);
+    if (from) type = clip(type+' · from '+(from.name||'another package'), 30);
     const t1=el('text',{x:12,y:22,class:'type'}); t1.textContent=type + (S.problems[n['@id']]?'   ⚠ needs attention':''); g.appendChild(t1);
     const t2=el('text',{x:12,y:43,'font-weight':'600'}); t2.textContent=label(n); g.appendChild(t2);
     if(k==='root'){ g.appendChild(el('rect',{width:p.w,height:p.h,fill:'none',stroke:'#111827',rx:9,'stroke-width':2,'stroke-dasharray':'5 3'})); }
@@ -721,7 +1098,7 @@ function draw(refit){
     if(from||k==='linked'){ g.appendChild(el('rect',{width:p.w,height:p.h,fill:'none',stroke:'#115e59',rx:9,'stroke-width':2,'stroke-dasharray':'4 3'})); }
     const title=el('title');
     title.textContent=(n.name||n['@id'])+'\n'+(n.description||'')
-      + (from?`\n\nProduced by ${from.name||'another crate'} — this crate points at it, the chain behind it lives there.`:'')
+      + (from?`\n\nProduced by ${from.name||'another package'} — this package points at it, the chain behind it lives there.`:'')
       + (k==='linked'?`\n\n${n[SUBCRATE_FIELD]}`:'');
     g.appendChild(title);
     g.onclick=(ev)=>{ev.stopPropagation(); select(n['@id']);};
@@ -750,23 +1127,30 @@ new ResizeObserver(()=>{ if(!S.layout||!vb) return; const r=$('#svg').getBoundin
   if(lastSize){ const sc=lastSize.w/vb.w; vb.w=r.width/sc; vb.h=r.height/sc; applyVB(); }
   lastSize={w:r.width,h:r.height}; }).observe($('#canvas'));
 
-// ---------- drawer (slide-out editor) ----------
-const drawer=$('#drawer');
-function openDrawer(){ drawer.classList.add('open'); }
-function closeDrawer(){ drawer.classList.remove('open','max'); S.selected=null; if(S.crate) draw(); }
-$('#btnClose').onclick=closeDrawer;
-$('#btnMax').onclick=()=>drawer.classList.toggle('max');
-(function resize(){ const h=$('#handle'); let start=null;
-  h.addEventListener('mousedown',e=>{ start={x:e.clientX,w:drawer.getBoundingClientRect().width}; drawer.classList.remove('max'); drawer.style.transition='none'; e.preventDefault(); });
-  window.addEventListener('mousemove',e=>{ if(!start)return; const w=Math.max(300,Math.min(window.innerWidth*0.7,start.w+(start.x-e.clientX))); document.documentElement.style.setProperty('--drawer',w+'px'); });
-  window.addEventListener('mouseup',()=>{ if(start){ start=null; drawer.style.transition=''; } });
-})();
+// ---------- sidebar panels ----------
+// Once a package is loaded the sidebar shows one thing at a time: the overview,
+// one box's details, or Improve. The map stays in view beside it.
+function setPanel(p){
+  S.panel=p;
+  $('#loaded').hidden=p!=='overview'; $('#editor').hidden=p!=='edit'; $('#improvePanel').hidden=p!=='improve';
+  document.body.classList.toggle('wide', p==='edit'||p==='improve');
+  $('#left').scrollTop=0;
+}
+function openDrawer(){ if(S.panel!=='edit'){ S.back = S.panel==='improve' ? 'improve' : 'overview'; setPanel('edit'); } }
+function closeDrawer(){ S.selected=null; if(!S.crate) return; if(S.panel==='edit'){ setPanel(S.back||'overview'); if(S.panel==='improve') renderImprove(); } draw(); }
+$('#btnEdBack').onclick=closeDrawer;
+$('#btnImpBack').onclick=()=>{ S.selected=null; setPanel('overview'); draw(); };
 
 // ---------- editor ----------
 const HIDDEN=new Set(['@id','@type','@context']);
 const NICE_KEY={name:'Name',description:'Description',author:'Author',keywords:'Keywords',license:'License',version:'Version',dateCreated:'Date created',datePublished:'Date published',dateModified:'Date modified',format:'File format',contentUrl:'File location',url:'Web link',command:'Command run',runBy:'Run by',usedDataset:'Used this data',usedSoftware:'Used this software',usedMLModel:'Used this model',generatedBy:'Made by',generated:'Produced',hasPart:'Contains',isPartOf:'Part of',contentSize:'Size',md5:'MD5 checksum',identifier:'Identifier',publisher:'Publisher',conformsTo:'Conforms to',additionalProperty:'Extra properties',parameter:'Parameters',startTime:'Started',endTime:'Finished'};
+// how a connection reads in a sentence about the box: "used the data → reads.fastq"
+const REL={usedDataset:'used the data',usedSoftware:'used the software',usedMLModel:'used the model',generatedBy:'was made by',generated:'produced',usedByComputation:'was used by',usedBy:'was used by',annotates:'describes',sourceOrganization:'comes from',isPartOf:'is part of',derivedFrom:'was derived from',trainedOn:'was trained on',dataSchema:'follows the schema'};
+// shown up front; anything else that is filled sits under "Other recorded details"
+const PRIMARY=new Set(['name','description','author','keywords','license','version','format','contentUrl','url','command','runBy','dateCreated','datePublished','publisher']);
 function fieldMeta(kind, key){ for(const g of (S.fields&&S.fields[kind])||[]) for(const f of g.fields) if(f.key===key) return f; return null; }
 function isFilled(v){ return !(v===undefined || v==='' || v===null || (Array.isArray(v)&&v.length===0)); }
+const isRefVal = (v,k) => (EDGE_PROPS.includes(k) && refIds(v).length>0) || (Array.isArray(v)&&v.length>0&&v.every(x=>x&&typeof x==='object'&&x['@id'])) || (!!v&&typeof v==='object'&&!Array.isArray(v)&&!!v['@id']&&Object.keys(v).length===1);
 function addField(n, f){
   if(!(f.key in n) || !isFilled(n[f.key])) n[f.key] = f.kind==='bool'?false : f.kind==='int'?0 : '';   // list-or-string fields accept plain text
   select(n['@id']); touched();
@@ -776,97 +1160,203 @@ function addField(n, f){
 function renderAiReady(n, kind){
   const box=$('#aireadyGroups'); box.innerHTML='';
   const groups=(S.fields&&S.fields[kind])||[];
-  $('#aiready').dataset.empty = groups.length===0 ? '1' : '0';
+  $('#aiready').hidden = groups.length===0; $('#aiready').open=false;
   $('#aireadyLead').innerHTML = kind==='root'
-    ? 'This is where the AI-Ready score comes from. Work down the groups; each one tells you how many are filled in. Click <b>Add</b> to answer one.'
+    ? 'Everything FAIRSCAPE can record about the package, grouped. For a short list of only what is missing — best first — use <b>Improve</b> instead.'
     : 'Extra details FAIRSCAPE can record for this box. Click <b>Add</b> to fill one in.';
-  groups.forEach((g,gi)=>{
+  groups.forEach(g=>{
     const filled=g.fields.filter(f=>isFilled(n[f.key])).length;
     const d=document.createElement('details'); d.className='grp';
-    const autoOpen = kind==='root' ? (filled<g.fields.length && !g.title.startsWith('Computed') && gi<3) : false;
-    if(autoOpen) d.open=true;
     d.innerHTML=`<summary>${g.title}<span class="cnt ${filled===g.fields.length?'done':''}">${filled} / ${g.fields.length}</span></summary>`+(g.blurb?`<div class="blurb">${g.blurb}</div>`:'');
     g.fields.forEach(f=>{
       const r=document.createElement('div'); r.className='frow'+(f.required?' req':'');
       const have=isFilled(n[f.key]);
       r.innerHTML=`<div class="t"><b>${f.label}</b><small class="clamp" title="${f.help.replace(/"/g,'&quot;')}">${f.help||''}</small></div>`+(have?`<span class="have">✓ filled</span>`:`<button>Add</button>`);
       if(!have) r.querySelector('button').onclick=()=>addField(n,f);
-      else r.onclick=()=>{ const row=[...document.querySelectorAll('#edFields .kv')].find(x=>x.querySelector('.k').dataset.key===f.key); if(row) row.scrollIntoView({block:'center'}); };
+      else r.onclick=()=>{ const row=[...document.querySelectorAll('#editor .kv')].find(x=>x.querySelector('.k').dataset.key===f.key); if(row){ const det=row.closest('details'); if(det) det.open=true; row.scrollIntoView({block:'center'}); } };
       d.appendChild(r);
     });
     box.appendChild(d);
   });
 }
-// ---------- the Improve view: the grader's quick-wins catalogue ranked by the last build ----------
+
+// ---------- Improve: only what is missing, best first, answered right here ----------
+const savedAt = () => S.cratePath || S.savedPath;
 async function loadImprove(){
-  if(!S.cratePath) return;
-  try{ S.improve=await api('/api/improve?path='+encodeURIComponent(S.cratePath)); }catch(e){ S.improve={error:e.message}; }
-  renderImprove();
+  const p=savedAt(); if(!p) return;
+  try{ S.improve=await api('/api/improve?path='+encodeURIComponent(p)); }catch(e){ S.improve={error:e.message}; }
+  if(S.panel==='improve') renderImprove();
 }
-function setView(v){ S.view=v; document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on', b.dataset.view===v)); $('#aiready').hidden = v!=='all' || $('#aiready').dataset.empty==='1'; $('#improve').hidden = v!=='improve'; if(v==='improve') renderImprove(); }
-document.querySelectorAll('#viewSeg button').forEach(b=>b.onclick=()=>setView(b.dataset.view));
+function openImprove(){
+  if(!S.crate) return;
+  S.selected=null; setPanel('improve'); draw();
+  if(!S.improve && savedAt()){ renderImprove(); loadImprove(); } else renderImprove();
+}
 const critNote = c => `${c.id}${c.name?' '+c.name:''}${c.score===null||c.score===undefined?' (not scored)':` (now ${c.score}/2)`}`;
-function improveAdd(item){
-  const n=byId(item.target['@id']); if(!n){ alert('That box is no longer in the crate.'); return; }
-  addField(n, {key:item.property, kind: item.type==='bool'?'bool' : item.type==='number'?'int' : 'str'});
-}
-// "lifts 0.a Findable (now 1/2), 5.a …" — which of the row's criteria are short
 function liftText(item){
   const short=item.criteria.filter(c=>item.lifts.includes(c.id));
-  if (item.lifts.length) return 'lifts '+short.map(c=>`<span class="short">${critNote(c)}</span>`).join(', ');
-  return S.improve && !S.improve.needs_grade ? 'its criteria ('+item.criteria.map(c=>c.id).join(', ')+') already score 2/2' : 'feeds '+item.criteria.map(c=>c.id).join(', ');
+  if (item.lifts.length) return 'Raises '+short.map(critNote).join(', ');
+  return 'Counts toward '+item.criteria.map(c=>c.id+(c.name?' '+c.name:'')).join(', ');
 }
-const rowTitle = item => `<b>${item.label}${item.win?'<span class="win">sure point</span>':''}</b>`;
-const rowHelp = item => `<small class="clamp" title="${(item.help||'').replace(/"/g,'&quot;')}">${item.help||''}</small>`;
-// one catalogue entry on one entity; compact = a line under a software property's head row
-function improveRow(item, compact){
-  const n=byId(item.target['@id']); const have = n ? isFilled(n[item.property]) : item.have;
-  const r=document.createElement('div'); r.className='frow'+(have?' done':'');
-  const terms = item.type==='terms';
-  r.innerHTML=`<div class="t">`+(compact?`<b>${item.target.name}</b>`:rowTitle(item)+`<small class="lift">${liftText(item)}</small>`+rowHelp(item))+`</div>`
-    +(have?`<span class="have">✓ filled</span>`: terms?`<span class="hint" title="Ontology terms are DefinedTerm entities — see Bigger jobs">needs entities</span>`:`<button>Add</button>`);
-  if(!have && !terms) r.querySelector('button').onclick=()=>improveAdd(item);
-  else if(have) r.onclick=()=>{ if(n) { select(n['@id']); const row=[...document.querySelectorAll('#edFields .kv')].find(x=>x.querySelector('.k').dataset.key===item.property); if(row) row.scrollIntoView({block:'center'}); } };
-  return r;
+const qKey = item => item.property+'|'+item.target['@id'];
+// the answer box for one catalogue entry; read() returns the value to store, or null when empty
+function answerInput(item){
+  const wrap=document.createElement('div'); let read;
+  const opts=item.options||[];
+  const chips=(choices, multi)=>{ const c=document.createElement('div'); c.className='chips';
+    choices.forEach(([v,l])=>{ const lab=document.createElement('label'); const i=document.createElement('input'); i.type=multi?'checkbox':'radio'; i.name='q-'+item.property+'-'+item.target['@id']; i.value=v; lab.append(i, document.createTextNode(l)); c.appendChild(lab); });
+    wrap.appendChild(c); return c; };
+  if (item.type==='bool'){
+    const c=chips([['true','Yes'],['false','No']], false);
+    read=()=>{ const i=c.querySelector('input:checked'); return i ? i.value==='true' : null; };
+  } else if (item.type==='select'){
+    const sel=document.createElement('select'); sel.innerHTML='<option value="">Choose…</option>';
+    opts.forEach(o=>{ const [v,l]=Array.isArray(o)?o:[o,o]; const op=document.createElement('option'); op.value=v; op.textContent=l; sel.appendChild(op); });
+    wrap.appendChild(sel); read=()=>sel.value||null;
+  } else if ((item.type==='list'||item.type==='idlist') && opts.length){
+    const c=chips(opts.map(o=>Array.isArray(o)?o:[o,o]), true);
+    read=()=>{ const v=[...c.querySelectorAll('input:checked')].map(i=>i.value); return v.length ? (item.type==='idlist'?v.map(x=>({'@id':x})):v) : null; };
+  } else if (item.type==='list'){
+    const t=document.createElement('textarea'); t.placeholder=item.placeholder||'One per line'; wrap.appendChild(t);
+    const h=document.createElement('div'); h.className='hint'; h.textContent='One per line.'; wrap.appendChild(h);
+    read=()=>{ const v=t.value.split('\n').map(x=>x.trim()).filter(Boolean); return v.length?v:null; };
+  } else if (item.type==='textarea'){
+    const t=document.createElement('textarea'); t.placeholder=item.placeholder||''; wrap.appendChild(t);
+    read=()=>t.value.trim()||null;
+  } else {
+    const i=document.createElement('input'); i.type='text'; i.placeholder=item.placeholder||'';
+    if(opts.length){ const id='dl-q-'+item.property.replace(/\W/g,''); const dl=document.createElement('datalist'); dl.id=id;
+      opts.forEach(o=>{ const op=document.createElement('option'); op.value=(String(Array.isArray(o)?o[0]:o)).split(' — ').pop(); op.label=Array.isArray(o)?o[1]:o; dl.appendChild(op); });
+      i.setAttribute('list',id); wrap.appendChild(dl);
+      const h=document.createElement('div'); h.className='hint'; h.textContent='Click the box for suggestions, or type your own.'; wrap.append(i,h);
+    } else wrap.appendChild(i);
+    read=()=>i.value.trim()||null;
+  }
+  return {el:wrap, read, focus:()=>{ const f=wrap.querySelector('input,textarea,select'); if(f) f.focus(); }};
 }
-// a software property applies to every Software box: one head row with the tally, then a line per box
-function softwareHead(item, all){
-  const filled=all.filter(i=>{const n=byId(i.target['@id']); return n && isFilled(n[i.property]);}).length;
-  const r=document.createElement('div'); r.className='frow'+(filled===all.length?' done':'');
-  r.innerHTML=`<div class="t">${rowTitle(item)}<small class="lift">${liftText(item)} · on every Software box</small>${rowHelp(item)}</div><span class="have" style="color:var(--muted)">${filled} / ${all.length} software</span>`;
-  return r;
+function qCard(item, open, onNext){
+  const n=byId(item.target['@id']); const k=qKey(item);
+  const c=document.createElement('div'); c.className='qcard'+(open?' open':'');
+  c.innerHTML=`<div class="qhead"><div class="t"><b></b><small></small></div><span class="chev">${open?'▾':'▸'}</span></div>`;
+  c.querySelector('b').innerHTML=item.label.replace(/</g,'&lt;')+(item.win?'<span class="win">sure point</span>':'');
+  c.querySelector('small').textContent=open?'':(item.help||'').split('. ')[0].replace(/\.?$/,'.');
+  c.querySelector('.qhead').onclick=()=>{ S.impTouched=true; S.openQ = open ? null : k; if(!open && n){ S.selected=n['@id']; draw(); } renderImprove(); };
+  if(!open) return c;
+  const body=document.createElement('div'); body.className='qbody';
+  const help=document.createElement('p'); help.className='help'; help.textContent=item.help||''; body.appendChild(help);
+  const inp=answerInput(item); body.appendChild(inp.el);
+  const why=document.createElement('p'); why.className='why'; why.textContent=liftText(item); body.appendChild(why);
+  const acts=document.createElement('div'); acts.className='acts';
+  const save=document.createElement('button'); save.className='primary small'; save.textContent='Save answer';
+  const skip=document.createElement('button'); skip.className='small'; skip.textContent='Skip for now';
+  save.onclick=()=>{ const v=inp.read(); if(v===null){ alert('Type or pick an answer first — or click "Skip for now".'); return; }
+    if(!n){ alert('That box is no longer in the package.'); return; }
+    n[item.property]=v; S.answered=(S.answered||0)+1; S.justDone.add(k); onNext(); touched(); };
+  skip.onclick=()=>{ S.skipped.add(k); onNext(); renderImprove(); };
+  acts.append(save, skip); body.appendChild(acts); c.appendChild(body);
+  setTimeout(inp.focus, 0);
+  return c;
+}
+// one card per piece of software: everything missing about it on one form, so it can be
+// thought about (or skipped) all at once instead of one question per property
+function swCard(entry, open, onNext){
+  const n=byId(entry.id); const name=(n&&n.name)||entry.id;
+  const c=document.createElement('div'); c.className='qcard'+(open?' open':'');
+  c.innerHTML=`<div class="qhead"><div class="t"><b></b><small></small></div><span class="chev">${open?'▾':'▸'}</span></div>`;
+  c.querySelector('b').innerHTML=('Describe “'+name+'”').replace(/</g,'&lt;')+(entry.items.some(i=>i.win)?'<span class="win">sure points</span>':'');
+  c.querySelector('small').textContent=entry.items.map(i=>i.label.split(' (')[0].toLowerCase()).join(', ').replace(/^./,x=>x.toUpperCase())+'.';
+  c.querySelector('.qhead').onclick=()=>{ S.impTouched=true; S.openQ = open ? null : entry.key; if(!open && n){ S.selected=n['@id']; draw(); } renderImprove(); };
+  if(!open) return c;
+  const body=document.createElement('div'); body.className='qbody';
+  const intro=document.createElement('p'); intro.className='help'; intro.textContent='Fill in whatever you know about this software and leave the rest blank.'; body.appendChild(intro);
+  const inputs=entry.items.map(item=>{ const f=document.createElement('div'); f.className='swfield';
+    const l=document.createElement('label'); l.innerHTML=item.label.replace(/</g,'&lt;')+(item.win?'<span class="win">sure point</span>':''); f.appendChild(l);
+    const h=document.createElement('div'); h.className='hint'; h.textContent=item.help||''; f.appendChild(h);
+    const inp=answerInput(item); f.appendChild(inp.el); body.appendChild(f); return {item, inp}; });
+  const acts=document.createElement('div'); acts.className='acts';
+  const save=document.createElement('button'); save.className='primary small'; save.textContent='Save what I filled in';
+  const skip=document.createElement('button'); skip.className='small'; skip.textContent='Skip this software';
+  save.onclick=()=>{ const got=inputs.map(x=>({...x, v:x.inp.read()})).filter(x=>x.v!==null);
+    if(!got.length){ alert('Fill in at least one field — or click "Skip this software".'); return; }
+    if(!n){ alert('That box is no longer in the package.'); return; }
+    got.forEach(x=>{ n[x.item.property]=x.v; S.justDone.add(qKey(x.item)); });
+    S.answered=(S.answered||0)+got.length; S.justDone.add(entry.key); onNext(); touched(); };
+  skip.onclick=()=>{ S.skipped.add(entry.key); onNext(); renderImprove(); };
+  acts.append(save, skip); body.appendChild(acts); c.appendChild(body);
+  setTimeout(()=>inputs[0]&&inputs[0].inp.focus(), 0);
+  return c;
 }
 function renderImprove(){
-  const body=$('#improveBody'), lead=$('#improveLead'); if(!body) return;
-  body.innerHTML='';
-  const buildBtn=(t)=>{ const b=document.createElement('button'); b.className='primary'; b.style.marginTop='8px'; b.textContent=t; b.onclick=buildArtifacts; return b; };
+  const body=$('#improveBody'), lead=$('#improveLead'), sc=$('#impScore'), prog=$('#impProgress');
+  body.innerHTML=''; sc.innerHTML=''; prog.hidden=true; if(!S.crate) return;
+  const btn=(t,fn,cls='primary')=>{ const b=document.createElement('button'); b.className=cls; b.textContent=t; b.onclick=fn; return b; };
   const I=S.improve;
-  if(!S.crate){ lead.textContent=''; return; }
-  if(!I){ lead.innerHTML = S.cratePath ? 'Loading…' : '<b>Save the crate first</b>, then choose <b>Build all artifacts…</b> under Artifacts ▾ to get a grade. This list is ranked from that grade.'; return; }
-  if(I.error){ lead.textContent='Could not load the improvement list: '+I.error; return; }
-  if(I.needs_grade){ lead.innerHTML='<b>Build the artifacts to get a grade first.</b> The AI-readiness review says which criteria are short; this list is then ranked so the cheapest points come first. Until then, here is the catalogue by effort.'; body.appendChild(buildBtn(S.cratePath?'Build all artifacts…':'Save, then build all artifacts…')); }
-  else { const e=I.estimate; lead.innerHTML=`Ranked from the last build: estimate <b>${e.total}/${e.max}</b>${e.generated?' ('+e.generated.replace('T',' ').slice(0,16)+')':''}. Easy, sure points first; <b>Add</b> puts the field in the editor above. Save and <b>Rebuild &amp; re-score</b> (Artifacts ▾) to see the new estimate.`+(S.cratePath?'':' <i>You have unsaved edits — the ranking is from the saved crate.</i>'); }
-  const labels=I.effort_labels||{1:'Quick',2:'A sentence or two',3:'In depth'};
-  for (const eff of [1,2,3]){
-    const items=I.items.filter(i=>i.effort===eff && byId(i.target['@id']));
-    if(!items.length) continue;
-    // one row per root property; software properties collapse into one row per property with a box per Software entity
-    const rows=[]; const perProp={};
-    items.forEach(i=>{ if(i.target.kind==='root') rows.push({item:i}); else { if(!perProp[i.property]){ perProp[i.property]={item:i, all:[]}; rows.push(perProp[i.property]); } perProp[i.property].all.push(i); } });
-    const todo=rows.filter(r=> r.all ? r.all.some(i=>{const n=byId(i.target['@id']); return n && !isFilled(n[i.property]);}) : !isFilled((byId(r.item.target['@id'])||{})[r.item.property])).length;
-    const d=document.createElement('details'); d.className='grp'; d.open = eff===1 || (eff===2 && todo && !I.needs_grade);
-    d.innerHTML=`<summary>${labels[eff]}<span class="cnt ${todo?'todo':'done'}">${todo?todo+' to do':'all filled'}</span></summary>`;
-    rows.forEach(r=>{
-      if(!r.all){ d.appendChild(improveRow(r.item,false)); return; }
-      d.appendChild(softwareHead(r.item, r.all));
-      const sub=document.createElement('div'); sub.className='sublist'; r.all.forEach(i=>sub.appendChild(improveRow(i,true))); d.appendChild(sub);
-    });
-    body.appendChild(d);
+  if(!I){
+    if(!savedAt()){ lead.innerHTML='<b>First, save the package.</b> Improve and the score both work from the saved copy.'; body.appendChild(btn('Save the package', ()=>$('#btnSave').click())); }
+    else lead.textContent='Loading the list…';
+    return;
   }
+  if(I.error){ lead.textContent='Could not load the list: '+I.error; return; }
+  if(I.needs_grade){
+    lead.innerHTML='<b>Score the package first</b> so the questions worth the most come first. It takes a few seconds. Or just start answering below — quickest first.';
+    body.appendChild(btn('Score the package', saveAndScore));
+  } else {
+    const e=I.estimate, pct=Math.round(100*e.total/Math.max(1,e.max));
+    sc.innerHTML=`<div class="scorebox"><div class="big">${e.total}<small> / ${e.max}</small></div><div style="flex:1"><div class="bar"><i style="width:${pct}%"></i></div><div class="hint">AI-readiness estimate from the last score${e.generated?' ('+e.generated.replace('T',' ').slice(0,16)+')':''}</div></div></div>`;
+    if(S.prevScore!=null){ const d=e.total-S.prevScore; const p=document.createElement('p'); p.className='note';
+      p.textContent = d>0 ? `▲ Up ${d} point${d===1?'':'s'} since your last answers.` : d<0 ? `▼ Down ${-d} since the last score.` : 'No change yet. Some answers only count once a related one is filled in too — a DOI, for example, counts fully once the publisher is a known repository. Keep going.';
+      sc.appendChild(p); }
+    lead.textContent='Answer what you can. The ones at the top raise the score most for the least work. Skip anything you do not know.';
+  }
+  if(S.answered){
+    prog.hidden=false; prog.innerHTML=`<span>✓ ${S.answered} answered${savedAt()===S.cratePath?'':' — not saved yet'}. Save and re-score to see the new score.</span>`;
+    prog.appendChild(btn('Save & re-score', saveAndScore));
+  }
+  // only what is still missing. Package questions one at a time; software as one card per program.
+  const live=I.items.filter(i=>i.type!=='terms' && byId(i.target['@id']));
+  const missing=live.filter(i=>!isFilled(byId(i.target['@id'])[i.property]) && !S.justDone.has(qKey(i)));
+  const entries=[];
+  missing.filter(i=>i.target.kind==='root').forEach(i=>entries.push({kind:'q', key:qKey(i), item:i, sec:'e'+i.effort}));
+  const sw={}; missing.filter(i=>i.target.kind!=='root').forEach(i=>{ const id=i.target['@id'];
+    if(!sw[id]){ sw[id]={kind:'sw', key:'sw|'+id, id, items:[], sec:'sw'}; entries.push(sw[id]); } sw[id].items.push(i); });
+  Object.values(sw).forEach(e=>e.items.sort((a,b)=>a.effort-b.effort||(b.win-a.win)));
+  const live2=entries.filter(e=>!S.justDone.has(e.key));
+  const ordered=[...live2.filter(e=>!S.skipped.has(e.key)), ...live2.filter(e=>S.skipped.has(e.key))];
+  if(S.openQ && !ordered.some(e=>e.key===S.openQ)) S.openQ=null;
+  if(S.openQ===undefined || (S.openQ===null && !S.impTouched)){ const first=ordered.find(e=>e.sec===S.impSec); S.openQ=first?first.key:null; }
+  // after an answer, open the next one in the same section
+  const next=e=>()=>{ S.impTouched=true; const same=ordered.filter(x=>x.sec===e.sec && x.key!==e.key && !S.skipped.has(x.key) && !S.justDone.has(x.key));
+    const after=same.find(x=>ordered.indexOf(x)>ordered.indexOf(e)) || same[0]; S.openQ = after?after.key:null; };
+  const labels=I.effort_labels||{1:'Quick',2:'A sentence or two',3:'In depth'};
+  const sections=[['e1',labels[1]],['e2',labels[2]],['e3',labels[3]],['sw','Software you used']];
+  // one section open at a time; the chips in the pinned header jump to any of them
+  const nav=$('#impNav'); nav.innerHTML='';
+  const openSec=sec=>{ S.impSec = S.impSec===sec ? null : sec; S.impTouched=true;
+    const first=ordered.find(e=>e.sec===S.impSec && !S.skipped.has(e.key)); S.openQ = first?first.key:null;
+    renderImprove(); const el=document.getElementById('isect-'+sec); if(el && S.impSec===sec) el.scrollIntoView({block:'start'}); };
+  const navChip=(sec,title,n)=>{ const b=document.createElement('button'); b.className=S.impSec===sec?'on':''; b.innerHTML=`${title}<small>${n}</small>`; b.onclick=()=>openSec(sec); nav.appendChild(b); };
+  sections.forEach(([sec,title])=>{ const n=ordered.filter(e=>e.sec===sec).length; if(n) navChip(sec,title,n); });
+  if(I.bigger_jobs && I.bigger_jobs.some(j=>j.short)) navChip('jobs','Bigger jobs',I.bigger_jobs.filter(j=>j.short).length);
+  sections.forEach(([sec,title])=>{
+    const es=ordered.filter(e=>e.sec===sec); if(!es.length) return;
+    const d=document.createElement('details'); d.className='isect'; d.id='isect-'+sec; d.open=S.impSec===sec;
+    const unit = sec==='sw' ? (es.length===1?'program':'programs') : 'to go';
+    d.innerHTML=`<summary>${title}<span class="cnt">${es.length} ${unit}</span></summary>`;
+    d.querySelector('summary').onclick=ev=>{ ev.preventDefault(); openSec(sec); };
+    es.forEach(e=>d.appendChild(e.kind==='sw' ? swCard(e, e.key===S.openQ, next(e)) : qCard(e.item, e.key===S.openQ, next(e))));
+    body.appendChild(d);
+  });
+  const done=live.filter(i=>S.justDone.has(qKey(i)));
+  if(done.length){ const d=document.createElement('details'); d.className='isect';
+    d.innerHTML=`<summary>Answered just now<span class="cnt">${done.length}</span></summary>`;
+    done.forEach(i=>{ const c=document.createElement('div'); c.className='qcard justdone'; c.innerHTML='<div class="qhead"><div class="t"><b></b></div><span class="chev">✓</span></div>'; c.querySelector('b').textContent=i.label+(i.target.kind==='root'?'':' — '+i.target.name); d.appendChild(c); });
+    body.appendChild(d); }
+  if(!missing.length){ const p=document.createElement('p'); p.className='note'; p.textContent='Every quick question is answered. The rest of the score comes from the bigger jobs below.'; body.appendChild(p); }
   if (I.bigger_jobs && I.bigger_jobs.length){
-    const d=document.createElement('details'); d.className='grp'; d.open=!I.needs_grade;
-    const n=I.bigger_jobs.filter(j=>j.short).length;
-    d.innerHTML=`<summary>Bigger jobs<span class="cnt ${n?'todo':'done'}">${n?n+' would help':'none needed'}</span></summary><div class="blurb">These need new entities, links, checksums or statistics — more than one field. Each is a skill you run in Claude Code on the saved crate; the editor here does not do them.</div>`;
+    const d=document.createElement('details'); d.className='grp'; d.style.marginTop='16px'; d.id='isect-jobs'; d.open=S.impSec==='jobs';
+    const nj=I.bigger_jobs.filter(j=>j.short).length;
+    d.innerHTML=`<summary>Bigger jobs<span class="cnt ${nj?'todo':'done'}">${nj?nj+' would help':'none needed'}</span></summary><div class="blurb">These need more than one answer — new boxes, links, checksums or statistics. Each is a skill you run in Claude Code on the saved package.</div>`;
+    d.querySelector('summary').onclick=ev=>{ ev.preventDefault(); S.impSec = S.impSec==='jobs' ? null : 'jobs'; renderImprove(); const el=document.getElementById('isect-jobs'); if(el&&S.impSec==='jobs') el.scrollIntoView({block:'start'}); };
     I.bigger_jobs.forEach(j=>{
       const r=document.createElement('div'); r.className='frow job'+(j.short?'':' done');
       r.innerHTML=`<div class="t"><b>${j.title}</b><small class="lift">${j.short?'lifts ':'feeds '}${j.criteria.map(c=>`<span class="${c.score===null||c.score<2?'short':''}">${critNote(c)}</span>`).join(', ')}</small><small class="why">${j.why}</small>${j.note?`<small class="clamp" title="${j.note.replace(/"/g,'&quot;')}">${j.note}</small>`:''}${j.skill?`<small>Run <code>/${j.skill}</code> in Claude Code (AIreadiness-grader skills).</small>`:''}</div>`;
@@ -875,22 +1365,55 @@ function renderImprove(){
     body.appendChild(d);
   }
 }
+async function saveAndScore(){
+  const path=savedAt(); if(!path){ $('#btnSave').click(); return; }
+  try{ const r=await post('/api/save',{crate:S.crate,path}); S.cratePath=r.path; S.savedPath=r.path; }catch(e){ alert(e.message); return; }
+  updateStatus();
+  S.prevScore = S.improve && S.improve.estimate ? S.improve.estimate.total : null;
+  const ok=await buildArtifacts({quiet:true});
+  if(ok){ S.answered=0; S.justDone=new Set(); S.skipped=new Set(); renderImprove(); }
+}
+
+// ---------- a box's details ----------
 function select(id){ S.selected=id; draw(); showEditor(id); }
 function showEditor(id){
   const n=id&&byId(id); if(!n){ closeDrawer(); return; }
   openDrawer();
-  const k=kindOf(n); const nice={dataset:'Data',software:'Software',computation:'Computation',mlmodel:'Model',schema:'Schema',root:'The crate itself',linked:'Another crate'};
+  $('#btnEdBack').textContent = S.back==='improve' ? '← Back to Improve' : '← Back to overview';
+  const k=kindOf(n); const nice={dataset:'Data',software:'Software',computation:'Computation',mlmodel:'Model',schema:'Schema',root:'The package itself',linked:'Another package'};
   $('#edType').textContent=nice[k]||typesOf(n).join(', '); $('#edName').textContent=n.name||'(no name yet)'; $('#edId').textContent=n['@id'];
   renderLinked(n, k);
-  const box=$('#edFields'); box.innerHTML='';
-  const order=['name','description','author','keywords','license','version','dateCreated','datePublished','format','contentUrl','url','command','runBy','usedDataset','usedSoftware','usedMLModel','generatedBy','generated','dateModified'];
-  const keys=Object.keys(n).filter(k=>!HIDDEN.has(k)).sort((a,b)=>{const ia=order.indexOf(a),ib=order.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b);});
-  keys.forEach(k=>box.appendChild(fieldRow(n,k)));
+  const order=['name','description','author','keywords','license','version','dateCreated','datePublished','format','contentUrl','url','command','runBy','dateModified'];
+  const keys=Object.keys(n).filter(x=>!HIDDEN.has(x)).sort((a,b)=>{const ia=order.indexOf(a),ib=order.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b);});
+  const refs=keys.filter(x=>isRefVal(n[x],x)), plain=keys.filter(x=>!refs.includes(x));
+  // up front: the everyday fields, plus anything just added and still empty
+  const front=plain.filter(x=>PRIMARY.has(x) || !isFilled(n[x])), rest=plain.filter(x=>!front.includes(x));
+  const box=$('#edFields'); box.innerHTML=''; front.forEach(x=>box.appendChild(fieldRow(n,x)));
+  const other=$('#edOther'); other.innerHTML='';
+  if(rest.length){ const d=document.createElement('details'); d.className='more'; d.innerHTML=`<summary>Other recorded details (${rest.length})</summary>`; rest.forEach(x=>d.appendChild(fieldRow(n,x))); other.appendChild(d); }
+  // connections, as sentences; the package box contains everything, so it gets none
+  $('#edConn').hidden = k==='root';
+  const rb=$('#edRefs'); rb.innerHTML='';
+  refs.filter(x=>x!=='hasPart').forEach(x=>refIds(n[x]).forEach(tid=>{
+    const m=byId(tid); const line=document.createElement('div'); line.className='refline';
+    line.innerHTML=`<span class="rel"></span><a href="#"></a><button title="remove this connection">×</button>`;
+    line.querySelector('.rel').textContent=(REL[x]||NICE_KEY[x]||x)+' →'; line.querySelector('a').textContent=m?(m.name||tid):tid;
+    line.querySelector('a').onclick=e=>{ e.preventDefault(); if(m) select(tid); };
+    line.querySelector('button').onclick=()=>{ const left=refIds(n[x]).filter(y=>y!==tid); if(left.length) n[x]=left.map(y=>({'@id':y})); else delete n[x]; select(n['@id']); touched(); };
+    rb.appendChild(line); }));
+  $('#edConnNone').textContent = rb.children.length ? '' : 'Not connected to anything yet. Say what this box used or produced:';
   const lt=$('#linkTarget'); lt.innerHTML='';
   S.crate['@graph'].filter(m=>m!==n&&!['descriptor','root'].includes(kindOf(m))).forEach(m=>{const o=document.createElement('option');o.value=m['@id'];o.textContent=`${nice[kindOf(m)]||''}: ${label(m)}`;lt.appendChild(o);});
   const pr=$('#edProblems'); pr.innerHTML=''; (S.problems[id]||[]).forEach(p=>{const d=document.createElement('div');d.className='problem';d.textContent='⚠ '+p;pr.appendChild(d);});
+  // point at Improve from the boxes it covers (the package itself, and software)
+  const nudge=$('#edNudge'); nudge.innerHTML='';
+  if((k==='root'||k==='software') && S.back!=='improve'){
+    const todo=S.improve&&S.improve.items ? S.improve.items.filter(i=>i.target['@id']===n['@id'] && i.type!=='terms' && !isFilled(n[i.property])).length : null;
+    if(todo!==0){ const d=document.createElement('div'); d.className='nudge';
+      d.innerHTML=`<span>${todo ? `${todo} quick question${todo===1?'':'s'} would raise the AI-readiness score.` : 'Want a better AI-readiness score? Improve asks only what is missing, best first.'}</span><button class="small primary">Improve →</button>`;
+      d.querySelector('button').onclick=openImprove; nudge.appendChild(d); }
+  }
   renderAiReady(n, k in {dataset:1,software:1,computation:1,mlmodel:1,root:1} ? k : null);
-  setView(S.view);
 }
 // A stub, or the crate it points at: say so, and offer to open that crate.
 function renderLinked(n, k){
@@ -901,14 +1424,14 @@ function renderLinked(n, k){
   const where = from[SUBCRATE_FIELD] ? ' ('+from[SUBCRATE_FIELD]+')' : '';
   d.textContent = k==='linked'
     ? (isConstituent(from)
-        ? 'A crate inside this one. Its own metadata file has the detail'+where+'.'
-        : 'Another crate on disk, pointed at because this crate used something it produced. It is not part of this crate'+where+'.')
-    : 'Produced by ' + (from.name||'another crate') + '. This box is that crate\u2019s entity, under its identifier; what made it lives there, and the datasheet and evidence graph follow the pointer.';
+        ? 'A package inside this one. Its own metadata file has the detail'+where+'.'
+        : 'Another package on disk, pointed at because this package used something it produced. It is not part of this package'+where+'.')
+    : 'Produced by ' + (from.name||'another package') + '. This box is that package\u2019s entity, under its identifier; what made it lives there, and the datasheet and evidence graph follow the pointer.';
   box.appendChild(d);
-  const open=document.createElement('button'); open.className='link'; open.textContent='Open '+(from.name||'that crate')+' in the studio';
+  const open=document.createElement('button'); open.className='link'; open.textContent='Open '+(from.name||'that package')+' in the studio';
   open.onclick=async()=>{
     const path=from.localPath || (S.cratePath ? S.cratePath.replace(/\/$/,'')+'/'+from[SUBCRATE_FIELD] : from[SUBCRATE_FIELD]);
-    try{ const r=await post('/api/open',{path}); setCrate(r.crate,r.crate_path); $('#status').textContent='Opened '+r.crate_path; }
+    try{ const r=await post('/api/open',{path}); S.how='Opened from disk (a linked package)'; S.source=r.crate_path; setCrate(r.crate,r.crate_path); $('#status').textContent='Opened '+r.crate_path; }
     catch(e){ alert('Could not open it: '+e.message); }
   };
   box.appendChild(open);
@@ -949,7 +1472,7 @@ function fieldRow(n,k){
   const del=document.createElement('button'); del.className='x'; del.textContent='×'; del.title='remove this property'; del.onclick=()=>{ if(!confirm('Remove "'+(NICE_KEY[k]||k)+'" from this box?'))return; delete n[k]; select(n['@id']); touched(); }; row.appendChild(del);
   return row;
 }
-function touched(){ S.cratePath=null; draw(); updateStatus(); const r=rootNode(); if(r) $('#crateTitle').textContent=r.name||'untitled crate'; if(S.view==='improve' && drawer.classList.contains('open')) renderImprove(); }
+function touched(){ if(S.cratePath) S.savedPath=S.cratePath; S.cratePath=null; draw(); updateStatus(); const r=rootNode(); if(r) $('#crateTitle').textContent=r.name||'untitled package'; if(S.panel==='improve') renderImprove(); }
 $('#btnAddKey').onclick=()=>{ const n=byId(S.selected); const k=$('#newKey').value.trim(); if(!n||!k)return; if(!(k in n)) n[k]=''; $('#newKey').value=''; select(n['@id']); touched(); };
 $('#btnLink').onclick=()=>{ const n=byId(S.selected); const p=$('#linkProp').value, t=$('#linkTarget').value; if(!n||!t)return; const cur=refIds(n[p]); if(!cur.includes(t)) n[p]=cur.concat(t).map(x=>({'@id':x})); select(n['@id']); touched(); };
 $('#btnDelete').onclick=()=>{ const id=S.selected; if(!id||!confirm('Delete this box and every link to it?'))return; S.crate['@graph']=S.crate['@graph'].filter(n=>n['@id']!==id);
@@ -957,25 +1480,88 @@ $('#btnDelete').onclick=()=>{ const id=S.selected; if(!id||!confirm('Delete this
   closeDrawer(); touched(); };
 
 // ---------- add entity ----------
-$('#btnAdd').onclick=async()=>{
-  if(!S.crate){ alert('Build or open a crate first (steps on the left).'); return; }
-  const type=prompt('What kind of box?\n\nDataset, Software, Computation, MLModel or Schema','Dataset'); if(!type)return;
-  const name=prompt('Give it a name'); if(!name)return;
-  try{ const r=await post('/api/entity/new',{crate:S.crate,type,name}); S.crate=r.crate; select(r.id); touched(); }catch(e){alert(e.message);}
+async function addEntity(type, ask){
+  if(!S.crate){ alert('Build or open a package first (steps on the left).'); return; }
+  const name=prompt(ask||'Give it a name'); if(!name)return;
+  try{ const r=await post('/api/entity/new',{crate:S.crate,type,name}); S.crate=r.crate; select(r.id); touched(); fit(); }catch(e){alert(e.message);}
+}
+$('#btnAdd').onclick=()=>{
+  if(!S.crate){ alert('Build or open a package first (steps on the left).'); return; }
+  const type=prompt('What kind of box?\n\nDataset, Software, Computation, MLModel or Schema','Dataset'); if(type) addEntity(type);
 };
+
+// ---------- "What to do next": a checklist under the form, ticked from the package itself ----------
+const DEFAULT_DESC = /created in (FAIRSCAPE|RO-Crate) Studio\.$/;
+function guideItems(){
+  const g=S.crate['@graph'], root=rootNode()||{}, n=k=>g.filter(x=>kindOf(x)===k).length;
+  const comps=g.filter(x=>kindOf(x)==='computation');
+  const items=[
+    {done: !!root.name && !/^Untitled (package|crate)$/.test(root.name), what:'Give the package a title',
+     why:'The dark box on the map is the package itself.', btn:'Edit details', act:editRoot},
+    {done: !!root.description && !DEFAULT_DESC.test(root.description), what:'Say what it is in a sentence or two',
+     why:'What was done, on what, and why.', btn:'Edit details', act:editRoot},
+  ];
+  if (S.kind && S.kind.id==='new') items.push(
+    {done:n('dataset')>0, what:'Add your data', why:'One box per file or folder of data — what went in and what came out.', btn:'+ Add data',
+     act:()=>addEntity('Dataset','Name this data (e.g. "Plate reader readings, March")')},
+    {done:n('software')>0, what:'Add the software you used', why:'Scripts, notebooks, programs or instruments software.', btn:'+ Add software',
+     act:()=>addEntity('Software','Name the software (e.g. "normalize.py")')},
+    {done:comps.length>0, what:'Add the step you ran', why:'A step (a computation) used data and software and produced new data.', btn:'+ Add a step',
+     act:()=>addEntity('Computation','Name the step (e.g. "Normalize readings")')},
+    {done:comps.some(c=>refIds(c.usedDataset).length+refIds(c.usedSoftware).length>0 && (refIds(c.generated).length>0 || g.some(x=>refIds(x.generatedBy).includes(c['@id'])))),
+     what:'Connect the step to what it used and what it made', why:'Click the step on the map, then "Connect to another box" at the bottom of its panel.',
+     btn: comps.length?'Show me':null, act:()=>{ select(comps[0]['@id']); const d=[...document.querySelectorAll('#editor details.more')].find(x=>/Connect/.test(x.textContent)); if(d){ d.open=true; d.scrollIntoView({block:'center'}); } }},
+  );
+  items.push(
+    {done:!!S.cratePath, what:'Save the package', why:'Pick a folder; the package is written there as ro-crate-metadata.json.', btn:'Save', act:()=>$('#btnSave').click()},
+    {done:!!S.built, what:'Make the datasheet and AI-readiness score', why:'A readable datasheet, plus a list of what to fill in next to score higher.', btn:'Build',
+     act:()=> S.art&&S.art.installed ? buildArtifacts() : installArtifacts()},
+    {done: !!(S.improve && S.improve.items && !S.improve.needs_grade && !S.improve.items.some(i=>i.type!=='terms' && byId(i.target['@id']) && !isFilled(byId(i.target['@id'])[i.property]))),
+     what:'Raise the score', why:'Improve asks only what is missing, best first, and you answer right there.', btn:'Improve', act:openImprove},
+  );
+  return items;
+}
+function renderGuide(){
+  const box=$('#guide'); box.hidden=!S.crate; if(!S.crate) return;
+  const ol=$('#guideList'); ol.innerHTML='';
+  const items=guideItems(); let next=items.findIndex(i=>!i.done);
+  items.forEach((it,i)=>{
+    const li=document.createElement('li'); li.className=it.done?'done':'';
+    li.innerHTML=`<span class="tick">${it.done?'✓':i+1}</span><span class="what"><span></span><small></small></span>`;
+    li.querySelector('.what span').textContent=it.what; li.querySelector('small').textContent=it.why;
+    if(!it.done && it.btn){ const b=document.createElement('button'); b.className='small'+(i===next?' primary':''); b.textContent=it.btn; b.onclick=it.act; li.appendChild(b); }
+    ol.appendChild(li);
+  });
+  if(next<0){ const li=document.createElement('li'); li.innerHTML='<span class="what">All done. The bigger jobs in <a href="#">Improve</a> can raise the score further.</span>'; li.querySelector('a').onclick=e=>{ e.preventDefault(); openImprove(); }; ol.appendChild(li); }
+}
 
 // ---------- validate / save / export / json ----------
 /* check-for-problems button is commented out in the header; handler kept for when it returns
 $('#btnValidate').onclick=async()=>{ try{ const r=await post('/api/validate',{crate:S.crate}); S.problems=r.problems||{};
-  const n=Object.keys(S.problems).length; alert(n?`${n} ${n===1?'box needs':'boxes need'} attention — they are marked ⚠ on the map. Click one to see what to fix.`:'No problems found. This is a valid RO-Crate.'+(r.advice&&r.advice.length?'\n\nTo score better on AI-readiness you could also add:\n• '+r.advice.slice(0,5).join('\n• '):'')); draw(); if(S.selected)showEditor(S.selected); }catch(e){alert('Could not check: '+e.message);} };
+  const n=Object.keys(S.problems).length; alert(n?`${n} ${n===1?'box needs':'boxes need'} attention — they are marked ⚠ on the map. Click one to see what to fix.`:'No problems found. This is a valid FAIRSCAPE Data Package.'+(r.advice&&r.advice.length?'\n\nTo score better on AI-readiness you could also add:\n• '+r.advice.slice(0,5).join('\n• '):'')); draw(); if(S.selected)showEditor(S.selected); }catch(e){alert('Could not check: '+e.message);} };
 */
-$('#btnSave').onclick=async()=>{ const p=prompt('Save the crate into which folder?', S.cratePath||S.suggestDir||''); if(!p)return; try{ const r=await post('/api/save',{crate:S.crate,path:p}); S.cratePath=r.path; await artifactLinks(); updateStatus(); if(S.built) $('#status').textContent+='  —  Artifacts ▾ › Rebuild all artifacts & re-score to grade the changes'; alert('Saved:\n'+r.written.join('\n')); }catch(e){alert(e.message);} };
+$('#btnSave').onclick=async()=>{ const p=prompt('Save the package into which folder?', S.cratePath||S.savedPath||S.suggestDir||''); if(!p)return; try{ const r=await post('/api/save',{crate:S.crate,path:p}); S.cratePath=r.path; S.savedPath=r.path; await artifactLinks(); updateStatus(); if(S.built) $('#status').textContent+='  —  Artifacts ▾ › Rebuild all artifacts & re-score to grade the changes'; alert('Saved:\n'+r.written.join('\n')); }catch(e){alert(e.message);} };
 $('#exportPlugin').onchange=async()=>{ const pl=$('#exportPlugin').value; $('#exportPlugin').value=''; if(!pl||!S.crate)return;
   try{ const r=await post('/api/export',{crate:S.crate,plugin:pl}); alert('Exported to:\n'+r.path); }catch(e){alert(e.message);} };
 $('#btnJson').onclick=()=>{ if(!S.crate)return; const w=window.open('','_blank'); w.document.write('<pre style="font:13px monospace;white-space:pre-wrap">'+JSON.stringify(S.crate,null,2).replace(/</g,'&lt;')+'</pre>'); };
 
+// ---------- sign-in (a shared, deployed studio only) ----------
+// resolves once the visitor is signed in; the server says what it asks for
+const signIn = () => new Promise(async done => {
+  const sess = await api('/api/session');
+  $('#signinNameRow').hidden = !sess.multi_user; $('#signinPassRow').hidden = !sess.password;
+  $('#signin').hidden = false; (sess.multi_user ? $('#signinName') : $('#signinPass')).focus();
+  $('#signin form').onsubmit = async ev => { ev.preventDefault(); $('#signinErr').textContent='';
+    try{ await post('/api/login',{name:$('#signinName').value, password:$('#signinPass').value});
+      $('#signin').hidden = true; done(); }catch(e){ $('#signinErr').textContent = e.message; } };
+});
+$('#btnSignOut').onclick = async()=>{ await post('/api/logout',{}); location.reload(); };
+
 // ---------- boot ----------
-(async()=>{ const info=await api('/api/info'); S.homeDir=info.home; S.suggestDir=info.suggest_dir;
+(async()=>{ let sess=await api('/api/session');
+  if (sess.signin && !sess.user) { await signIn(); sess=await api('/api/session'); }
+  if (sess.multi_user) { $('#demoBanner').hidden=false; $('#demoUser').textContent='Signed in as '+sess.user; }
+  const info=await api('/api/info'); S.homeDir=info.home; S.suggestDir=info.suggest_dir;
   S.plugins=await api('/api/plugins');
   try{ S.fields=await api('/api/fields'); }catch(e){ S.fields={}; }
   try{ S.nf=await api('/api/nextflow/info'); }catch(e){ S.nf={available:false,reason:e.message,fields:[]}; }

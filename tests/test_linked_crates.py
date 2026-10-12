@@ -334,7 +334,7 @@ def test_a_bad_link_folder_never_costs_a_finished_run_its_crate(upstream, tmp_pa
     payload = _crate_payload(FakeJob())
     assert payload["crate"]["@graph"]                      # the run's crate survives
     assert "ok" not in payload                             # and the run still counts as fine
-    assert "linking failed, crate left unlinked" in " ".join(FakeJob.lines)
+    assert "linking failed, package left unlinked" in " ".join(FakeJob.lines)
 
 
 # -- the form ------------------------------------------------------------------
